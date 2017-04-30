@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	_ "fmt"
 	"log"
 	"os"
 	"strings"
@@ -11,14 +10,10 @@ import (
 
 const (
 	delimiter = ','
-	fn        = "unicode_things.csv"
+	fn        = "things.csv"
 )
 
 func main() {
-	// 	s := `FirstName,MiddleName,LastName,Email
-	// John,K,Moore,jkdoe@nothing.com
-	// Winston,Moby,Kazowski,Winston@nothing.net
-	// Dilbert,Sylvester,AlecBaldwin,dsa@silly.com`
 	var columnNum int
 	var columnCounts = make(map[int]int)
 	var lines []string
@@ -52,14 +47,23 @@ func main() {
 		lines = append(lines, line)
 	}
 
-	// w := bufio.NewWriter(out)
-	w := bufio.NewWriter(os.Stdout)
+	w := bufio.NewWriter(out)
+	// w := bufio.NewWriter(os.Stdout)
 	for _, line := range lines {
 		words := strings.Split(line, string(delimiter))
 		columnNum = 0
 		for _, word := range words {
 			for len(word) < columnCounts[columnNum] {
 				word += " "
+			}
+			rCount, wordLen := utf8.RuneCountInString(word), len(word)
+			if rCount < wordLen {
+				for i := 0; i < wordLen-rCount; i++ {
+					word += " "
+					// if i == 10 {
+					// 	break
+					// }
+				}
 			}
 			columnNum++
 			if _, ok := columnCounts[columnNum]; ok {
