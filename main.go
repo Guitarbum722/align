@@ -60,12 +60,10 @@ func main() {
 			if rCount < wordLen {
 				for i := 0; i < wordLen-rCount; i++ {
 					word += " "
-					// if i == 10 {
-					// 	break
-					// }
 				}
 			}
 			columnNum++
+			// since columnNum was just incremented, do not add a comma to the last field
 			if _, ok := columnCounts[columnNum]; ok {
 				w.WriteString(word + string(delimiter))
 				continue
