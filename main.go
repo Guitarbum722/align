@@ -13,6 +13,12 @@ const (
 	fn        = "things.csv"
 )
 
+// ScanWriter scans input and writes output
+type ScanWriter struct {
+	s *bufio.Scanner
+	w *bufio.Writer
+}
+
 func main() {
 	var columnNum int
 	var columnCounts = make(map[int]int)
