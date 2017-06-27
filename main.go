@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"io"
 	"log"
 	"os"
 	"strings"
@@ -13,26 +14,68 @@ const (
 	fn        = "things.csv"
 )
 
+// ScanWriter scans input and writes output
+type ScanWriter struct {
+	s *bufio.Scanner
+	w *bufio.Writer
+}
+
+func newScanWriter(in io.Reader, out io.Writer) *ScanWriter {
+	return &ScanWriter{
+		s: bufio.NewScanner(in),
+		w: bufio.NewWriter(out),
+	}
+}
+
 func main() {
 	var columnNum int
 	var columnCounts = make(map[int]int)
 	var lines []string
-	f, err := os.Open(fn)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer f.Close()
-	out, err := os.Create("out" + fn)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	defer out.Close()
-	scanner := bufio.NewScanner(f)
+	var sw *ScanWriter
 
-	for scanner.Scan() {
+	fi, _ := os.Stdin.Stat()
+	if (fi.Mode() & os.ModeCharDevice) == 0 {
+		switch len(os.Args) {
+		case 2:
+			f, err := os.Create(os.Args[1])
+			if err != nil {
+				log.Fatalln(err)
+			}
+			defer f.Close()
+			sw = newScanWriter(os.Stdin, f)
+		default:
+			sw = newScanWriter(os.Stdin, os.Stdout)
+		}
+	} else {
+		switch len(os.Args) {
+		case 2:
+			f, err := os.Open(os.Args[1])
+			if err != nil {
+				log.Fatalln(err)
+			}
+			defer f.Close()
+			sw = newScanWriter(f, os.Stdout)
+		case 3:
+			f, err := os.Open(os.Args[1])
+			if err != nil {
+				log.Fatalln(err)
+			}
+			defer f.Close()
+			out, err := os.Create(os.Args[2])
+			if err != nil {
+				log.Fatalln(err)
+			}
+			defer out.Close()
+			sw = newScanWriter(f, out)
+		default:
+			sw = newScanWriter(os.Stdin, os.Stdout)
+		}
+	}
+
+	for sw.s.Scan() {
 		temp := 0
 		columnNum = 0
-		line := scanner.Text()
+		line := sw.s.Text()
 		for i, v := range line {
 			temp += utf8.RuneLen(v)
 			if v != delimiter && i < len(line)-1 {
@@ -47,8 +90,6 @@ func main() {
 		lines = append(lines, line)
 	}
 
-	w := bufio.NewWriter(out)
-	// w := bufio.NewWriter(os.Stdout)
 	for _, line := range lines {
 		words := strings.Split(line, string(delimiter))
 		columnNum = 0
@@ -65,12 +106,12 @@ func main() {
 			columnNum++
 			// since columnNum was just incremented, do not add a comma to the last field
 			if _, ok := columnCounts[columnNum]; ok {
-				w.WriteString(word + string(delimiter))
+				sw.w.WriteString(word + string(delimiter))
 				continue
 			}
-			w.WriteString(word)
+			sw.w.WriteString(word)
 		}
-		w.WriteByte('\n')
+		sw.w.WriteByte('\n')
 	}
-	w.Flush()
+	sw.w.Flush()
 }
