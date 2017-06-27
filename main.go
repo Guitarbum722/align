@@ -23,17 +23,25 @@ func main() {
 	var columnNum int
 	var columnCounts = make(map[int]int)
 	var lines []string
-	f, err := os.Open(fn)
-	if err != nil {
-		log.Fatalln(err)
+	var scanner *bufio.Scanner
+
+	fi, _ := os.Stdin.Stat()
+	if (fi.Mode() & os.ModeCharDevice) == 0 {
+		scanner = bufio.NewScanner(os.Stdin)
+	} else {
+		f, err := os.Open(fn)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		defer f.Close()
+		scanner = bufio.NewScanner(f)
 	}
-	defer f.Close()
+
 	out, err := os.Create("out" + fn)
 	if err != nil {
 		log.Fatalln(err)
 	}
 	defer out.Close()
-	scanner := bufio.NewScanner(f)
 
 	for scanner.Scan() {
 		temp := 0
