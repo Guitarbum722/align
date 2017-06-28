@@ -1,4 +1,4 @@
-# go-align-things
+# true-up
 A general purpose package that aligns text
 
 _Coming Soon!_
