@@ -1,37 +1,15 @@
 package main
 
 import (
-	"bufio"
-	"io"
 	"log"
 	"os"
-	"strings"
-	"unicode/utf8"
+
+	"github.com/Guitarbum722/true-up/align"
 )
-
-const (
-	delimiter = ','
-	fn        = "things.csv"
-)
-
-// ScanWriter scans input and writes output
-type ScanWriter struct {
-	s *bufio.Scanner
-	w *bufio.Writer
-}
-
-func newScanWriter(in io.Reader, out io.Writer) *ScanWriter {
-	return &ScanWriter{
-		s: bufio.NewScanner(in),
-		w: bufio.NewWriter(out),
-	}
-}
 
 func main() {
-	var columnNum int
-	var columnCounts = make(map[int]int)
-	var lines []string
-	var sw *ScanWriter
+	delimiter := align.Comma // default
+	var sw align.Alignable
 
 	fi, _ := os.Stdin.Stat()
 	if (fi.Mode() & os.ModeCharDevice) == 0 {
@@ -42,9 +20,9 @@ func main() {
 				log.Fatalln(err)
 			}
 			defer f.Close()
-			sw = newScanWriter(os.Stdin, f)
+			sw = align.NewAligner(os.Stdin, f, delimiter)
 		default:
-			sw = newScanWriter(os.Stdin, os.Stdout)
+			sw = align.NewAligner(os.Stdin, os.Stdout, delimiter)
 		}
 	} else {
 		switch len(os.Args) {
@@ -54,7 +32,7 @@ func main() {
 				log.Fatalln(err)
 			}
 			defer f.Close()
-			sw = newScanWriter(f, os.Stdout)
+			sw = align.NewAligner(f, os.Stdout, delimiter)
 		case 3:
 			f, err := os.Open(os.Args[1])
 			if err != nil {
@@ -66,52 +44,12 @@ func main() {
 				log.Fatalln(err)
 			}
 			defer out.Close()
-			sw = newScanWriter(f, out)
+			sw = align.NewAligner(f, out, delimiter)
 		default:
-			sw = newScanWriter(os.Stdin, os.Stdout)
+			sw = align.NewAligner(os.Stdin, os.Stdout, delimiter)
 		}
 	}
 
-	for sw.s.Scan() {
-		temp := 0
-		columnNum = 0
-		line := sw.s.Text()
-		for i, v := range line {
-			temp += utf8.RuneLen(v)
-			if v != delimiter && i < len(line)-1 {
-				continue
-			}
-			if temp > columnCounts[columnNum] {
-				columnCounts[columnNum] = temp
-			}
-			columnNum++
-			temp = 0
-		}
-		lines = append(lines, line)
-	}
-
-	for _, line := range lines {
-		words := strings.Split(line, string(delimiter))
-		columnNum = 0
-		for _, word := range words {
-			for len(word) < columnCounts[columnNum] {
-				word += " "
-			}
-			rCount, wordLen := utf8.RuneCountInString(word), len(word)
-			if rCount < wordLen {
-				for i := 0; i < wordLen-rCount; i++ {
-					word += " "
-				}
-			}
-			columnNum++
-			// since columnNum was just incremented, do not add a comma to the last field
-			if _, ok := columnCounts[columnNum]; ok {
-				sw.w.WriteString(word + string(delimiter))
-				continue
-			}
-			sw.w.WriteString(word)
-		}
-		sw.w.WriteByte('\n')
-	}
-	sw.w.Flush()
+	lines := sw.ColumnCounts()
+	sw.Export(lines)
 }
