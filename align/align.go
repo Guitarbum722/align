@@ -26,12 +26,14 @@ type Alignable interface {
 	Export([]string)
 }
 
+type columnCount int
+
 // Aligner scans input and writes output
 type Aligner struct {
 	S            *bufio.Scanner
 	W            *bufio.Writer
 	del          rune // delimiter
-	columnCounts map[int]int
+	columnCounts map[columnCount]int
 }
 
 // NewAligner creates and initializes a ScanWriter with in and out as its initial Reader and Writer
@@ -43,7 +45,7 @@ func NewAligner(in io.Reader, out io.Writer, delimiter rune) Alignable {
 		S:            bufio.NewScanner(in),
 		W:            bufio.NewWriter(out),
 		del:          delimiter,
-		columnCounts: make(map[int]int),
+		columnCounts: make(map[columnCount]int),
 	}
 }
 
@@ -53,9 +55,11 @@ func NewAligner(in io.Reader, out io.Writer, delimiter rune) Alignable {
 func (a *Aligner) ColumnCounts() []string {
 	var lines []string
 	for a.S.Scan() {
-		temp := 0
-		columnNum := 0
+		var columnNum columnCount
+		var temp int
+
 		line := a.S.Text()
+
 		for i, v := range line {
 			temp += utf8.RuneLen(v)
 			if v != a.del && i < len(line)-1 {
@@ -77,7 +81,9 @@ func (a *Aligner) ColumnCounts() []string {
 func (a *Aligner) Export(lines []string) {
 	for _, line := range lines {
 		words := strings.Split(line, string(a.del))
-		columnNum := 0
+
+		var columnNum columnCount
+
 		for _, word := range words {
 			for len(word) < a.columnCounts[columnNum] {
 				word += " "
