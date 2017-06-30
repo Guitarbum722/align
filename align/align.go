@@ -97,7 +97,7 @@ func (a *Aligner) Export(lines []string) {
 				}
 			}
 			columnNum++
-			// since columnNum was just incremented, do not add a comma to the last field
+			// since columnNum was just incremented, do not add a delimiter to the last field
 			if _, ok := a.columnCounts[columnNum]; ok {
 				a.W.WriteString(word + string(a.del))
 				continue
