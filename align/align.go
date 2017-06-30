@@ -20,6 +20,8 @@ const (
 	Plus     = '+'
 )
 
+const singleSpace = " "
+
 // Alignable ...
 type Alignable interface {
 	ColumnCounts() []string
@@ -84,18 +86,22 @@ func (a *Aligner) Export(lines []string) {
 
 		var columnNum columnCount
 
-		for _, word := range words {
+		for i, word := range words {
+			// leading padding for all fields except for the first
+			if i > 0 {
+				word = singleSpace + word
+			}
 			for len(word) < a.columnCounts[columnNum] {
-				word += " "
+				word += singleSpace
 			}
 			rCount, wordLen := utf8.RuneCountInString(word), len(word)
 			if rCount < wordLen {
 				for i := 0; i < wordLen-rCount; i++ {
-					word += " "
+					word += singleSpace
 				}
 			}
 			columnNum++
-			// since columnNum was just incremented, do not add a comma to the last field
+			// since columnNum was just incremented, do not add a delimiter to the last field
 			if _, ok := a.columnCounts[columnNum]; ok {
 				a.W.WriteString(word + string(a.del))
 				continue
