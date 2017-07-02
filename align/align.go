@@ -20,7 +20,12 @@ const (
 	Plus     = '+'
 )
 
-const singleSpace = " "
+// Various values to be used by consuming programs
+const (
+	SingleSpace = " "
+	DoubleQuote = "\""
+	SingleQuote = "'"
+)
 
 // Alignable ...
 type Alignable interface {
