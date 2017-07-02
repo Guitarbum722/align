@@ -20,7 +20,12 @@ const (
 	Plus     = '+'
 )
 
-const singleSpace = " "
+// Various values to be used by consuming programs
+const (
+	SingleSpace = " "
+	DoubleQuote = "\""
+	SingleQuote = "'"
+)
 
 // Alignable ...
 type Alignable interface {
@@ -89,15 +94,15 @@ func (a *Aligner) Export(lines []string) {
 		for i, word := range words {
 			// leading padding for all fields except for the first
 			if i > 0 {
-				word = singleSpace + word
+				word = SingleSpace + word
 			}
 			for len(word) < a.columnCounts[columnNum] {
-				word += singleSpace
+				word += SingleSpace
 			}
 			rCount, wordLen := utf8.RuneCountInString(word), len(word)
 			if rCount < wordLen {
 				for i := 0; i < wordLen-rCount; i++ {
-					word += singleSpace
+					word += SingleSpace
 				}
 			}
 			columnNum++
@@ -106,9 +111,8 @@ func (a *Aligner) Export(lines []string) {
 				a.W.WriteString(word + string(a.del))
 				continue
 			}
-			a.W.WriteString(word)
+			a.W.WriteString(word + "\n")
 		}
-		a.W.WriteByte('\n')
 	}
 	a.W.Flush()
 }
