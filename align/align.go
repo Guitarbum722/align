@@ -91,9 +91,9 @@ func (a *Aligner) Export(lines []string) {
 
 		var columnNum columnCount
 
-		for i, word := range words {
+		for _, word := range words {
 			// leading padding for all fields except for the first
-			if i > 0 {
+			if columnNum > 0 {
 				word = SingleSpace + word
 			}
 			for len(word) < a.columnCounts[columnNum] {
