@@ -111,9 +111,8 @@ func (a *Aligner) Export(lines []string) {
 				a.W.WriteString(word + string(a.del))
 				continue
 			}
-			a.W.WriteString(word)
+			a.W.WriteString(word + "\n")
 		}
-		a.W.WriteByte('\n')
 	}
 	a.W.Flush()
 }
