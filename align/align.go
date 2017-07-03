@@ -56,6 +56,15 @@ func NewAligner(in io.Reader, out io.Writer, delimiter rune) Alignable {
 	}
 }
 
+// Init accepts the same arguments as NewAligner.  It simply provides another option
+// for initializing an Aligner which is already allocated.
+func (a *Aligner) Init(in io.Reader, out io.Writer, delimiter rune) {
+	a.S = bufio.NewScanner(in)
+	a.W = bufio.NewWriter(out)
+	a.del = delimiter
+	a.columnCounts = make(map[columnCount]int)
+}
+
 // ColumnCounts scans the input and determines the maximum length of each field based on
 // the longest value for each field in all of the pertaining lines.
 // All of the lines of the io.Reader are returned as a string slice.
