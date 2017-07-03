@@ -40,7 +40,7 @@ type Aligner struct {
 	S            *bufio.Scanner
 	W            *bufio.Writer
 	del          rune // delimiter
-	columnCounts map[columnCount]int
+	columnCounts map[int]int
 }
 
 // NewAligner creates and initializes a ScanWriter with in and out as its initial Reader and Writer
@@ -52,7 +52,7 @@ func NewAligner(in io.Reader, out io.Writer, delimiter rune) Alignable {
 		S:            bufio.NewScanner(in),
 		W:            bufio.NewWriter(out),
 		del:          delimiter,
-		columnCounts: make(map[columnCount]int),
+		columnCounts: make(map[int]int),
 	}
 }
 
@@ -62,7 +62,7 @@ func (a *Aligner) Init(in io.Reader, out io.Writer, delimiter rune) {
 	a.S = bufio.NewScanner(in)
 	a.W = bufio.NewWriter(out)
 	a.del = delimiter
-	a.columnCounts = make(map[columnCount]int)
+	a.columnCounts = make(map[int]int)
 }
 
 // ColumnCounts scans the input and determines the maximum length of each field based on
@@ -71,7 +71,7 @@ func (a *Aligner) Init(in io.Reader, out io.Writer, delimiter rune) {
 func (a *Aligner) ColumnCounts() []string {
 	var lines []string
 	for a.S.Scan() {
-		var columnNum columnCount
+		var columnNum int
 		var temp int
 
 		line := a.S.Text()
@@ -98,7 +98,7 @@ func (a *Aligner) Export(lines []string) {
 	for _, line := range lines {
 		words := strings.Split(line, string(a.del))
 
-		var columnNum columnCount
+		var columnNum int
 
 		for _, word := range words {
 			// leading padding for all fields except for the first
@@ -115,12 +115,15 @@ func (a *Aligner) Export(lines []string) {
 				}
 			}
 			columnNum++
-			// since columnNum was just incremented, do not add a delimiter to the last field
-			if _, ok := a.columnCounts[columnNum]; ok {
-				a.W.WriteString(word + string(a.del))
+
+			// Do not add a delimiter to the last field
+			// This also properly aligns the output even if there are lines with a different number of fields
+			if columnNum == len(words) {
+				a.W.WriteString(word + "\n")
 				continue
 			}
-			a.W.WriteString(word + "\n")
+			a.W.WriteString(word + string(a.del))
+
 		}
 	}
 	a.W.Flush()
