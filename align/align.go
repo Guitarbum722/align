@@ -18,6 +18,8 @@ const (
 	LThan    = '<'
 	Hyphen   = '-'
 	Plus     = '+'
+	RParen   = ')'
+	LParen   = '('
 )
 
 // Various values to be used by consuming programs
@@ -123,7 +125,6 @@ func (a *Aligner) Export(lines []string) {
 				continue
 			}
 			a.W.WriteString(word + string(a.del))
-
 		}
 	}
 	a.W.Flush()
