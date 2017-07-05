@@ -1,55 +1,92 @@
 package main
 
 import (
-	"log"
+	"errors"
+	"fmt"
+	"io"
 	"os"
 
 	"github.com/Guitarbum722/true-up/align"
+	"github.com/fatih/flags"
 )
 
 func main() {
-	delimiter := align.Comma // default
-	var sw align.Alignable
+	if retval, err := run(); err != nil {
+		fmt.Fprintln(os.Stderr, err.Error())
+		os.Exit(retval)
+	}
+}
 
+func run() (int, error) {
+	args := os.Args[1:]
+
+	// defaults
+	sep := ','
+	var input io.Reader
+	var output io.Writer
+
+	if flags.Has("sep", args) {
+		delimiter, err := flags.Value("sep", args)
+		if err != nil {
+			return 1, err
+		}
+		sep = []rune(delimiter)[0]
+	}
+
+	// check for piped input, but use specified input file if supplied
 	fi, _ := os.Stdin.Stat()
 	if (fi.Mode() & os.ModeCharDevice) == 0 {
-		switch len(os.Args) {
-		case 2:
-			f, err := os.Create(os.Args[1])
+		if flags.Has("file", args) {
+			fn, err := flags.Value("file", args)
 			if err != nil {
-				log.Fatalln(err)
+				return 1, err
+			}
+			f, err := os.Open(fn)
+			if err != nil {
+				return 1, err
 			}
 			defer f.Close()
-			sw = align.NewAligner(os.Stdin, f, delimiter)
-		default:
-			sw = align.NewAligner(os.Stdin, os.Stdout, delimiter)
+			input = f
+		} else {
+			input = os.Stdin
 		}
 	} else {
-		switch len(os.Args) {
-		case 2:
-			f, err := os.Open(os.Args[1])
+		if flags.Has("file", args) {
+			fn, err := flags.Value("file", args)
 			if err != nil {
-				log.Fatalln(err)
+				return 1, err
+			}
+			f, err := os.Open(fn)
+			if err != nil {
+				return 1, err
 			}
 			defer f.Close()
-			sw = align.NewAligner(f, os.Stdout, delimiter)
-		case 3:
-			f, err := os.Open(os.Args[1])
-			if err != nil {
-				log.Fatalln(err)
-			}
-			defer f.Close()
-			out, err := os.Create(os.Args[2])
-			if err != nil {
-				log.Fatalln(err)
-			}
-			defer out.Close()
-			sw = align.NewAligner(f, out, delimiter)
-		default:
-			sw = align.NewAligner(os.Stdin, os.Stdout, delimiter)
+			input = f
+		} else {
+			return 1, errors.New("no input provided")
 		}
 	}
 
+	// if --output flag is not provided with a file name, then use Stdout
+	if flags.Has("output", args) {
+		fn, err := flags.Value("output", args)
+		if err != nil {
+			return 1, err
+		}
+		f, err := os.Create(fn)
+		if err != nil {
+			return 1, err
+		}
+		defer f.Close()
+		output = f
+	} else {
+		output = os.Stdout
+	}
+
+	sw := align.NewAligner(input, output, sep)
+
 	lines := sw.ColumnCounts()
 	sw.Export(lines)
+
+	return 0, nil
 }
