@@ -40,3 +40,26 @@ field1     | field2
 Value1     | Value2
 CoolValue1 | CoolValue2| CoolValue3
 ```
+
+### Usage - true-up API
+
+Initialize your `Aligner` which returns an `Alignable`.
+```go
+    // align.NewAligner(input io.Reader, output io.Writer, sep rune)
+    a := align.NewAligner(input, output, seperator)
+
+    lines := a.ColumnCounts()
+    a.Export(lines)
+```
+
+or create an `Aligner` and call `Init()`
+
+```go
+    s := &align.Aligner{}
+    s.Init(input, output, sep)
+```
+
+```go
+    lines := a.ColumnCounts()
+    a.Export(lines)
+```
