@@ -33,9 +33,16 @@ const (
 type Alignable interface {
 	ColumnCounts() []string
 	Export([]string)
+	SplitWithQual(string, string, string) []string
 }
 
 type columnCount int
+
+// TextQualifier is used to configure the scanner to account for a text qualifier
+type TextQualifier struct {
+	On        bool
+	Qualifier rune
+}
 
 // Aligner scans input and writes output
 type Aligner struct {
@@ -43,18 +50,20 @@ type Aligner struct {
 	W            *bufio.Writer
 	del          rune // delimiter
 	columnCounts map[int]int
+	txtq         TextQualifier
 }
 
 // NewAligner creates and initializes a ScanWriter with in and out as its initial Reader and Writer
 // and sets del to the desired delimiter to be used for alignment.
 // It is meant to read the contents of its io.Reader to determine the length of each field
 // and output the results in an aligned format.
-func NewAligner(in io.Reader, out io.Writer, delimiter rune) Alignable {
+func NewAligner(in io.Reader, out io.Writer, delimiter rune, qu TextQualifier) Alignable {
 	return &Aligner{
 		S:            bufio.NewScanner(in),
 		W:            bufio.NewWriter(out),
 		del:          delimiter,
 		columnCounts: make(map[int]int),
+		txtq:         qu,
 	}
 }
 
@@ -78,10 +87,29 @@ func (a *Aligner) ColumnCounts() []string {
 
 		line := a.S.Text()
 
+		inside := false // inside of the text qualifier
+
 		for i, v := range line {
 			temp += utf8.RuneLen(v)
-			if v != a.del && i < len(line)-1 {
-				continue
+
+			// if text qualified, count a rune that matches the delimiter as part of the field data
+			if a.txtq.On {
+				if v == a.txtq.Qualifier {
+					inside = !inside
+				}
+				if inside {
+					if i < len(line)-1 {
+						continue // not checking for delimiter if inside of the qualifier
+					}
+				} else {
+					if v != a.del && i < len(line)-1 {
+						continue
+					}
+				}
+			} else {
+				if v != a.del && i < len(line)-1 {
+					continue
+				}
 			}
 			if temp > a.columnCounts[columnNum] {
 				a.columnCounts[columnNum] = temp
@@ -98,7 +126,7 @@ func (a *Aligner) ColumnCounts() []string {
 // Export will pad each field in lines based on the Aligner's column counts
 func (a *Aligner) Export(lines []string) {
 	for _, line := range lines {
-		words := strings.Split(line, string(a.del))
+		words := a.SplitWithQual(line, string(a.del), string(a.txtq.Qualifier))
 
 		var columnNum int
 
@@ -128,4 +156,27 @@ func (a *Aligner) Export(lines []string) {
 		}
 	}
 	a.W.Flush()
+}
+
+// SplitWithQual basically works like the standard strings.Split() func, but will consider a text qualifier if set.
+func (a *Aligner) SplitWithQual(s, sep, qual string) []string {
+	var words = make([]string, 0, strings.Count(s, sep))
+	inside := false
+	var start int
+	var end int
+
+	for i := 0; i < len(s); i++ {
+		if s[i] == qual[0] {
+			inside = !inside
+		}
+		if !inside && s[i] == sep[0] {
+			words = append(words, s[start:end])
+			start = end + 1
+		} else if len(s)-1 == i {
+			words = append(words, s[start:])
+		}
+
+		end++
+	}
+	return words
 }
