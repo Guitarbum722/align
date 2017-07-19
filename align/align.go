@@ -160,6 +160,11 @@ func (a *Aligner) Export(lines []string) {
 
 // SplitWithQual basically works like the standard strings.Split() func, but will consider a text qualifier if set.
 func (a *Aligner) SplitWithQual(s, sep, qual string) []string {
+
+	if !a.txtq.On {
+		return strings.Split(s, sep) // use standard Split() method if no qualifier is considered
+	}
+
 	var words = make([]string, 0, strings.Count(s, sep))
 	inside := false
 	var start int
