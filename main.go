@@ -24,7 +24,6 @@ func run() (int, error) {
 	sep := ','
 	var input io.Reader
 	var output io.Writer
-	var qu align.TextQualifier
 
 	if flags.Has("sep", args) {
 		delimiter, err := flags.Value("sep", args)
@@ -84,18 +83,7 @@ func run() (int, error) {
 		output = os.Stdout
 	}
 
-	if flags.Has("qual", args) {
-		q, err := flags.Value("qual", args)
-		if err != nil {
-			return 1, err
-		}
-
-		qu = align.TextQualifier{
-			On:        true,
-			Qualifier: []rune(q)[0],
-		}
-	}
-	sw := align.NewAligner(input, output, sep, qu)
+	sw := align.NewAligner(input, output, sep)
 
 	lines := sw.ColumnCounts()
 	sw.Export(lines)
