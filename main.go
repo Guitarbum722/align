@@ -10,6 +10,15 @@ import (
 	"github.com/fatih/flags"
 )
 
+const usage = `Usage: true-up [-sep] [-output] [-file] [-qual]
+Options:
+  -h | --help  : help
+  -file        : input file.  If not specified, pipe input to stdin
+  -output      : output file. (defaults to stdout)
+  -qual        : text qualifier (if applicable)
+  -sep         : delimiter. (defaults to ',')
+`
+
 func main() {
 	if retval, err := run(); err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
@@ -26,7 +35,14 @@ func run() (int, error) {
 	var output io.Writer
 	var qu align.TextQualifier
 
+	if flags.Has("h", args) || flags.Has("help", args) {
+		return 1, errors.New(usage)
+	}
+
 	if flags.Has("sep", args) {
+		if len(args) < 2 {
+			return 1, errors.New("argument to -sep required")
+		}
 		delimiter, err := flags.Value("sep", args)
 		if err != nil {
 			return 1, err
@@ -70,6 +86,9 @@ func run() (int, error) {
 
 	// if --output flag is not provided with a file name, then use Stdout
 	if flags.Has("output", args) {
+		if len(args) < 2 {
+			return 1, errors.New("argument to -output required")
+		}
 		fn, err := flags.Value("output", args)
 		if err != nil {
 			return 1, err
