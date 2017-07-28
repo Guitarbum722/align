@@ -34,9 +34,8 @@ type Alignable interface {
 	ColumnCounts() []string
 	Export([]string)
 	SplitWithQual(string, string, string) []string
+	ColumnSize(int) int
 }
-
-type columnCount int
 
 // TextQualifier is used to configure the scanner to account for a text qualifier
 type TextQualifier struct {
@@ -76,6 +75,16 @@ func (a *Aligner) Init(in io.Reader, out io.Writer, sep string) {
 	a.columnCounts = make(map[int]int)
 }
 
+// ColumnSize looks up the Aligner's columnCounts key with num and returns the value
+// that was set by ColumnCounts().
+// If num is not a valid key in Aligner.columnCounts, then -1 is returned.
+func (a *Aligner) ColumnSize(num int) int {
+	if _, ok := a.columnCounts[num]; !ok {
+		return -1
+	}
+	return a.columnCounts[num]
+}
+
 // FieldLen works in a similar manner to the standard lib function strings.Index().
 // Instead of returning the index of the first instance of sep, it returns the length
 // of s before the first index of sep.
@@ -107,11 +116,7 @@ func genFieldLen(s, sep, qual string) int {
 		return len(s)
 	}
 
-	count := 0
-	for _, v := range s[:i] {
-		count += utf8.RuneLen(v)
-	}
-	return count
+	return len(s[:i])
 }
 
 // ColumnCounts scans the input and determines the maximum length of each field based on
@@ -195,24 +200,13 @@ func (a *Aligner) SplitWithQual(s, sep, qual string) []string {
 	if !a.txtq.On {
 		return strings.Split(s, sep) // use standard Split() method if no qualifier is considered
 	}
-
 	var words = make([]string, 0, strings.Count(s, sep))
-	inside := false
-	var start int
-	var end int
 
-	for i := 0; i < len(s); i++ {
-		if s[i] == qual[0] {
-			inside = !inside
-		}
-		if !inside && s[i] == sep[0] {
-			words = append(words, s[start:end])
-			start = end + 1
-		} else if len(s)-1 == i {
-			words = append(words, s[start:])
-		}
-
-		end++
+	for start := 0; start < len(s); {
+		count := genFieldLen(s[start:], sep, qual)
+		words = append(words, s[start:start+count])
+		start += count + len(sep)
 	}
+
 	return words
 }
