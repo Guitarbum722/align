@@ -30,7 +30,7 @@ func run() (int, error) {
 	args := os.Args[1:]
 
 	// defaults
-	sep := ','
+	sep := ","
 	var input io.Reader
 	var output io.Writer
 	var qu align.TextQualifier
@@ -47,7 +47,7 @@ func run() (int, error) {
 		if err != nil {
 			return 1, err
 		}
-		sep = []rune(delimiter)[0]
+		sep = delimiter
 	}
 
 	// check for piped input, but use specified input file if supplied
@@ -111,7 +111,7 @@ func run() (int, error) {
 
 		qu = align.TextQualifier{
 			On:        true,
-			Qualifier: []rune(q)[0],
+			Qualifier: q,
 		}
 	}
 	sw := align.NewAligner(input, output, sep, qu)

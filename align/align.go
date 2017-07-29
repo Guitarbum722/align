@@ -34,21 +34,20 @@ type Alignable interface {
 	ColumnCounts() []string
 	Export([]string)
 	SplitWithQual(string, string, string) []string
+	ColumnSize(int) int
 }
-
-type columnCount int
 
 // TextQualifier is used to configure the scanner to account for a text qualifier
 type TextQualifier struct {
 	On        bool
-	Qualifier rune
+	Qualifier string
 }
 
 // Aligner scans input and writes output
 type Aligner struct {
 	S            *bufio.Scanner
 	W            *bufio.Writer
-	del          rune // delimiter
+	sep          string // separator string or delimiter
 	columnCounts map[int]int
 	txtq         TextQualifier
 }
@@ -57,11 +56,11 @@ type Aligner struct {
 // and sets del to the desired delimiter to be used for alignment.
 // It is meant to read the contents of its io.Reader to determine the length of each field
 // and output the results in an aligned format.
-func NewAligner(in io.Reader, out io.Writer, delimiter rune, qu TextQualifier) Alignable {
+func NewAligner(in io.Reader, out io.Writer, sep string, qu TextQualifier) Alignable {
 	return &Aligner{
 		S:            bufio.NewScanner(in),
 		W:            bufio.NewWriter(out),
-		del:          delimiter,
+		sep:          sep,
 		columnCounts: make(map[int]int),
 		txtq:         qu,
 	}
@@ -69,11 +68,55 @@ func NewAligner(in io.Reader, out io.Writer, delimiter rune, qu TextQualifier) A
 
 // Init accepts the same arguments as NewAligner.  It simply provides another option
 // for initializing an Aligner which is already allocated.
-func (a *Aligner) Init(in io.Reader, out io.Writer, delimiter rune) {
+func (a *Aligner) Init(in io.Reader, out io.Writer, sep string) {
 	a.S = bufio.NewScanner(in)
 	a.W = bufio.NewWriter(out)
-	a.del = delimiter
+	a.sep = sep
 	a.columnCounts = make(map[int]int)
+}
+
+// ColumnSize looks up the Aligner's columnCounts key with num and returns the value
+// that was set by ColumnCounts().
+// If num is not a valid key in Aligner.columnCounts, then -1 is returned.
+func (a *Aligner) ColumnSize(num int) int {
+	if _, ok := a.columnCounts[num]; !ok {
+		return -1
+	}
+	return a.columnCounts[num]
+}
+
+// FieldLen works in a similar manner to the standard lib function strings.Index().
+// Instead of returning the index of the first instance of sep, it returns the length
+// of s before the first index of sep.
+func FieldLen(s, sep string) int {
+	return genFieldLen(s, sep, "")
+}
+
+// FieldLenEscaped works in the same way as FieldLen, but a text qualifer string can
+// be provided.  If qual is an empty string, then the behavior will be exactly the same
+// as FieldLen.
+func FieldLenEscaped(s, sep, qual string) int {
+	return genFieldLen(s, sep, qual)
+}
+
+func genFieldLen(s, sep, qual string) int {
+	i := 0
+	if qual == "" || !strings.HasPrefix(s, qual) {
+		i = strings.Index(s, sep)
+	} else {
+		i = strings.Index(s, qual+sep)
+
+		if i == -1 {
+			return len(s)
+		}
+		return len(s[:i+len(qual)])
+	}
+
+	if i == -1 {
+		return len(s)
+	}
+
+	return len(s[:i])
 }
 
 // ColumnCounts scans the input and determines the maximum length of each field based on
@@ -87,36 +130,28 @@ func (a *Aligner) ColumnCounts() []string {
 
 		line := a.S.Text()
 
-		inside := false // inside of the text qualifier
-
-		for i, v := range line {
-			temp += utf8.RuneLen(v)
-
-			// if text qualified, count a rune that matches the delimiter as part of the field data
-			if a.txtq.On {
-				if v == a.txtq.Qualifier {
-					inside = !inside
+		if a.txtq.On {
+			for start := 0; start < len(line); {
+				temp = FieldLenEscaped(line[start:], a.sep, a.txtq.Qualifier)
+				start += temp + len(a.sep)
+				if temp > a.columnCounts[columnNum] {
+					a.columnCounts[columnNum] = temp
 				}
-				if inside {
-					if i < len(line)-1 {
-						continue // not checking for delimiter if inside of the qualifier
-					}
-				} else {
-					if v != a.del && i < len(line)-1 {
-						continue
-					}
-				}
-			} else {
-				if v != a.del && i < len(line)-1 {
-					continue
-				}
+				columnNum++
+				temp = 0
 			}
-			if temp > a.columnCounts[columnNum] {
-				a.columnCounts[columnNum] = temp
+		} else {
+			for start := 0; start < len(line); {
+				temp = FieldLen(line[start:], a.sep)
+				start += temp + len(a.sep)
+				if temp > a.columnCounts[columnNum] {
+					a.columnCounts[columnNum] = temp
+				}
+				columnNum++
+				temp = 0
 			}
-			columnNum++
-			temp = 0
 		}
+
 		lines = append(lines, line)
 	}
 
@@ -126,23 +161,24 @@ func (a *Aligner) ColumnCounts() []string {
 // Export will pad each field in lines based on the Aligner's column counts
 func (a *Aligner) Export(lines []string) {
 	for _, line := range lines {
-		words := a.SplitWithQual(line, string(a.del), string(a.txtq.Qualifier))
+		words := a.SplitWithQual(line, a.sep, a.txtq.Qualifier)
 
 		var columnNum int
-
 		for _, word := range words {
-			// leading padding for all fields except for the first
-			if columnNum > 0 {
-				word = SingleSpace + word
-			}
 			for len(word) < a.columnCounts[columnNum] {
 				word += SingleSpace
 			}
+
 			rCount, wordLen := utf8.RuneCountInString(word), len(word)
 			if rCount < wordLen {
 				for i := 0; i < wordLen-rCount; i++ {
 					word += SingleSpace
 				}
+			}
+
+			// leading padding for all fields except for the first
+			if columnNum > 0 {
+				word = SingleSpace + word
 			}
 			columnNum++
 
@@ -152,7 +188,7 @@ func (a *Aligner) Export(lines []string) {
 				a.W.WriteString(word + "\n")
 				continue
 			}
-			a.W.WriteString(word + string(a.del))
+			a.W.WriteString(word + a.sep)
 		}
 	}
 	a.W.Flush()
@@ -164,24 +200,13 @@ func (a *Aligner) SplitWithQual(s, sep, qual string) []string {
 	if !a.txtq.On {
 		return strings.Split(s, sep) // use standard Split() method if no qualifier is considered
 	}
-
 	var words = make([]string, 0, strings.Count(s, sep))
-	inside := false
-	var start int
-	var end int
 
-	for i := 0; i < len(s); i++ {
-		if s[i] == qual[0] {
-			inside = !inside
-		}
-		if !inside && s[i] == sep[0] {
-			words = append(words, s[start:end])
-			start = end + 1
-		} else if len(s)-1 == i {
-			words = append(words, s[start:])
-		}
-
-		end++
+	for start := 0; start < len(s); {
+		count := genFieldLen(s[start:], sep, qual)
+		words = append(words, s[start:start+count])
+		start += count + len(sep)
 	}
+
 	return words
 }
