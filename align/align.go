@@ -29,18 +29,33 @@ const (
 	SingleQuote = "'"
 )
 
+type justification byte
+
+// Left, Right or Center justification options
+const (
+	JustifyRight justification = iota
+	JustifyCenter
+	JustifyLeft
+)
+
 // Alignable ...
 type Alignable interface {
 	ColumnCounts() []string
 	Export([]string)
 	SplitWithQual(string, string, string) []string
 	ColumnSize(int) int
+	UpdatePadding(PaddingOpts)
 }
 
 // TextQualifier is used to configure the scanner to account for a text qualifier
 type TextQualifier struct {
 	On        bool
 	Qualifier string
+}
+
+// PaddingOpts provides configurability for left/center/right justification and padding length
+type PaddingOpts struct {
+	Justification justification
 }
 
 // Aligner scans input and writes output
@@ -50,12 +65,14 @@ type Aligner struct {
 	sep          string // separator string or delimiter
 	columnCounts map[int]int
 	txtq         TextQualifier
+	padOpts      PaddingOpts
 }
 
 // NewAligner creates and initializes a ScanWriter with in and out as its initial Reader and Writer
 // and sets del to the desired delimiter to be used for alignment.
 // It is meant to read the contents of its io.Reader to determine the length of each field
 // and output the results in an aligned format.
+// Left justification is used by default.  See UpdatePadding to set the justification.
 func NewAligner(in io.Reader, out io.Writer, sep string, qu TextQualifier) Alignable {
 	return &Aligner{
 		S:            bufio.NewScanner(in),
@@ -63,16 +80,20 @@ func NewAligner(in io.Reader, out io.Writer, sep string, qu TextQualifier) Align
 		sep:          sep,
 		columnCounts: make(map[int]int),
 		txtq:         qu,
+		padOpts: PaddingOpts{
+			Justification: JustifyLeft,
+		},
 	}
 }
 
 // Init accepts the same arguments as NewAligner.  It simply provides another option
 // for initializing an Aligner which is already allocated.
-func (a *Aligner) Init(in io.Reader, out io.Writer, sep string) {
+func (a *Aligner) Init(in io.Reader, out io.Writer, sep string, qu TextQualifier) {
 	a.S = bufio.NewScanner(in)
 	a.W = bufio.NewWriter(out)
 	a.sep = sep
 	a.columnCounts = make(map[int]int)
+	a.txtq = qu
 }
 
 // ColumnSize looks up the Aligner's columnCounts key with num and returns the value
@@ -83,6 +104,11 @@ func (a *Aligner) ColumnSize(num int) int {
 		return -1
 	}
 	return a.columnCounts[num]
+}
+
+// UpdatePadding uses PaddingOpts p to update the Aligner's padding options.
+func (a *Aligner) UpdatePadding(p PaddingOpts) {
+	a.padOpts = p
 }
 
 // FieldLen works in a similar manner to the standard lib function strings.Index().
@@ -165,21 +191,7 @@ func (a *Aligner) Export(lines []string) {
 
 		var columnNum int
 		for _, word := range words {
-			for len(word) < a.columnCounts[columnNum] {
-				word += SingleSpace
-			}
-
-			rCount, wordLen := utf8.RuneCountInString(word), len(word)
-			if rCount < wordLen {
-				for i := 0; i < wordLen-rCount; i++ {
-					word += SingleSpace
-				}
-			}
-
-			// leading padding for all fields except for the first
-			if columnNum > 0 {
-				word = SingleSpace + word
-			}
+			word = pad(word, columnNum, a.columnCounts[columnNum], a.padOpts)
 			columnNum++
 
 			// Do not add a delimiter to the last field
@@ -192,6 +204,62 @@ func (a *Aligner) Export(lines []string) {
 		}
 	}
 	a.W.Flush()
+}
+
+// pad s based on the supplied PaddingOpts
+func pad(s string, columnNum, count int, p PaddingOpts) string {
+	padLength := countPadding(s, count)
+
+	switch p.Justification {
+	case JustifyLeft:
+		s = trailingPad(s, padLength)
+	case JustifyRight:
+		s = leadingPad(s, padLength)
+	case JustifyCenter:
+
+	default:
+		s = trailingPad(s, padLength)
+	}
+
+	// at least one space to pad every field after the delimiter for readability
+	if columnNum > 0 {
+		s = SingleSpace + s
+	}
+	s = s + SingleSpace
+
+	return s
+}
+
+// determines the length of the padding needed
+func countPadding(s string, count int) int {
+	padLength := count - len(s)
+	rCount, wordLen := utf8.RuneCountInString(s), len(s)
+	if rCount < wordLen {
+		padLength += wordLen - rCount
+	}
+	return padLength
+}
+
+// prepends padding
+func leadingPad(s string, padLen int) string {
+	pad := make([]byte, 0, padLen)
+
+	for len(pad) < padLen {
+		pad = append(pad, ' ')
+	}
+
+	return string(pad) + s
+}
+
+// appends padding
+func trailingPad(s string, padLen int) string {
+	pad := make([]byte, 0, padLen)
+
+	for len(pad) < padLen {
+		pad = append(pad, ' ')
+	}
+
+	return s + string(pad)
 }
 
 // SplitWithQual basically works like the standard strings.Split() func, but will consider a text qualifier if set.
