@@ -216,6 +216,12 @@ func pad(s string, columnNum, count int, p PaddingOpts) string {
 	case JustifyRight:
 		s = leadingPad(s, padLength)
 	case JustifyCenter:
+		if padLength > 2 {
+			s = trailingPad(s, padLength/2)
+			s = leadingPad(s, padLength-(padLength/2))
+		} else {
+			s = trailingPad(s, padLength)
+		}
 
 	default:
 		s = trailingPad(s, padLength)
