@@ -10,13 +10,16 @@ import (
 	"github.com/fatih/flags"
 )
 
-const usage = `Usage: true-up [-sep] [-output] [-file] [-qual]
+const usage = `Usage: true-up [-sep] [-output] [-file] [-qual] [-jstfy]
 Options:
   -h | --help  : help
   -file        : input file.  If not specified, pipe input to stdin
   -output      : output file. (defaults to stdout)
   -qual        : text qualifier (if applicable)
   -sep         : delimiter. (defaults to ',')
+  -left        : left justification. (default)
+  -center      : center justification
+  -right       : right justification
 `
 
 func main() {
@@ -114,7 +117,16 @@ func run() (int, error) {
 			Qualifier: q,
 		}
 	}
+
 	sw := align.NewAligner(input, output, sep, qu)
+
+	if flags.Has("left", args) {
+		sw.UpdatePadding(align.PaddingOpts{Justification: align.JustifyLeft})
+	} else if flags.Has("right", args) {
+		sw.UpdatePadding(align.PaddingOpts{Justification: align.JustifyRight})
+	} else if flags.Has("center", args) {
+		sw.UpdatePadding(align.PaddingOpts{Justification: align.JustifyCenter})
+	}
 
 	lines := sw.ColumnCounts()
 	sw.Export(lines)

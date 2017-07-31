@@ -69,6 +69,16 @@ var columnCountCases = []struct {
 			3: 6,
 		},
 	},
+	{
+		"one,tisß\nseven,two", // with byte count > 1
+		",",
+		false,
+		"",
+		map[int]int{
+			0: 5,
+			1: 5,
+		},
+	},
 }
 
 func TestColumnCounts(t *testing.T) {

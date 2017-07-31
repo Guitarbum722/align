@@ -22,6 +22,20 @@ Another use is to align blocks of code by `=` or `->`, etc.
 
 
 ### Usage - CLI examples
+
+```
+Usage: true-up [-sep] [-output] [-file] [-qual] [-jstfy]
+Options:
+  -h | --help  : help
+  -file        : input file.  If not specified, pipe input to stdin
+  -output      : output file. (defaults to stdout)
+  -qual        : text qualifier (if applicable)
+  -sep         : delimiter. (defaults to ',')
+  -left        : left justification. (default)
+  -center      : center justification
+  -right       : right justification
+```
+
 _Specify your input file, output file, delimiter._
 *You can also pipe input to Stdin (if the `-file` option is provided, it will overwrite Stdin)*
 If no `-output` option is provided, Stdout will be used.
