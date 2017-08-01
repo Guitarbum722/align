@@ -81,19 +81,20 @@ func NewAligner(in io.Reader, out io.Writer, sep string, qu TextQualifier) Align
 		columnCounts: make(map[int]int),
 		txtq:         qu,
 		padOpts: PaddingOpts{
-			Justification: JustifyLeft,
+			Justification: JustifyLeft, // default
 		},
 	}
 }
 
 // Init accepts the same arguments as NewAligner.  It simply provides another option
 // for initializing an Aligner which is already allocated.
-func (a *Aligner) Init(in io.Reader, out io.Writer, sep string, qu TextQualifier) {
+func (a *Aligner) Init(in io.Reader, out io.Writer, sep string, qu TextQualifier, pOpts PaddingOpts) {
 	a.S = bufio.NewScanner(in)
 	a.W = bufio.NewWriter(out)
 	a.sep = sep
 	a.columnCounts = make(map[int]int)
 	a.txtq = qu
+	a.padOpts = pOpts
 }
 
 // ColumnSize looks up the Aligner's columnCounts key with num and returns the value
