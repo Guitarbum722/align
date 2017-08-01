@@ -1,6 +1,8 @@
 # true-up
 _A general purpose package that aligns text_
 
+[![GoDoc](https://img.shields.io/badge/api-reference-blue.svg?style=flat-square)](https://godoc.org/github.com/Guitarbum722/true-up/align) 
+
 The focus of this package is to provide a fast, efficient, and useful library for aligning text.
 
 What ### Included
