@@ -42,7 +42,7 @@ Options:
 ```
 
 _Specify your input file, output file, delimiter._
-*You can also pipe input to Stdin (if the `-file` option is provided, it will take precedence Stdin)*
+*You can also pipe input to Stdin (if the `-file` option is provided, it will take precedence over Stdin)*
 If no `-output` option is provided, Stdout will be used.
 
 ```sh
