@@ -5,7 +5,7 @@ _A general purpose package that aligns text_
 
 The focus of this package is to provide a fast, efficient, and useful library for aligning text.
 
-### Included
+What ### Included
 
 * Fully capable library, waiting to be consumed by your program.
 * A simple yet usefule CLI with options to specify your delimiter, input and output files, etc.
