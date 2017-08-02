@@ -1,0 +1,16 @@
+language: go
+
+go:
+  - 1.7.x
+  - 1.8.x
+  - master
+
+notifications:
+  email:
+    recipients:
+      - johnkenneth.moore@gmail.com
+    on_success: never
+    on_failure: always 
+
+script:
+  - go test -v ./...
