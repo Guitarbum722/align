@@ -6,6 +6,8 @@ import (
 	"testing"
 )
 
+const comma = ","
+
 var columnCountCases = []struct {
 	input  string
 	sep    string
@@ -15,7 +17,7 @@ var columnCountCases = []struct {
 }{
 	{
 		"John,Doe,Henry\nMichael,Douglas,F",
-		",",
+		comma,
 		false,
 		"",
 		map[int]int{
@@ -26,7 +28,7 @@ var columnCountCases = []struct {
 	},
 	{
 		"John,Doe,\"Henry, Mellencamp\",jm@nothing.com\nMichael,Douglas,F",
-		",",
+		comma,
 		true,
 		"\"",
 		map[int]int{
@@ -36,7 +38,7 @@ var columnCountCases = []struct {
 		},
 	}, {
 		"John,Doe,\"Henry, Mellencamp\",jm@nothing.com\nMichael,Douglas,F",
-		",",
+		comma,
 		true,
 		"\"",
 		map[int]int{
@@ -71,7 +73,7 @@ var columnCountCases = []struct {
 	},
 	{
 		"one,tisß\nseven,two", // with byte count > 1
-		",",
+		comma,
 		false,
 		"",
 		map[int]int{
@@ -103,7 +105,7 @@ Karleigh,Destiny,Dean,nunc.In@lorem.edu,Stockholms län,Märsta,9038,Shaine Reil
 Alisa,Walker,Armand,Sed@Nuncmauriselit.com,Himachal Pradesh,Shimla,MZ0 4QS,Olivia Velez ,Alisa,Walker,Armand,Sed@Nuncmauriselit.com,Himachal Pradesh,Shimla,MZ0 4QS,Olivia Velez ,Alisa,Walker,Armand,Sed@Nuncmauriselit.com,Himachal Pradesh,Shimla,MZ0 4QS,Olivia Velez         
 `
 
-	sw := NewAligner(strings.NewReader(input), os.Stdout, ",", TextQualifier{On: false})
+	sw := NewAligner(strings.NewReader(input), os.Stdout, comma, TextQualifier{On: false})
 
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -116,25 +118,25 @@ Alisa,Walker,Armand,Sed@Nuncmauriselit.com,Himachal Pradesh,Shimla,MZ0 4QS,Olivi
 func BenchmarkSplitWithQual(b *testing.B) {
 	input := "First,\"Middle, name\",Last,Email,Region,City,Zip,Full_Name"
 
-	sw := NewAligner(strings.NewReader(input), os.Stdout, ",", TextQualifier{On: true, Qualifier: "\""})
+	sw := NewAligner(strings.NewReader(input), os.Stdout, comma, TextQualifier{On: true, Qualifier: "\""})
 
 	b.ReportAllocs()
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_ = sw.SplitWithQual(input, ",", "\"")
+		_ = sw.SplitWithQual(input, comma, "\"")
 	}
 }
 
 func BenchmarkSplitWithQualNoQual(b *testing.B) {
 	input := "First,Middle,Last,Email,Region,City,Zip,Full_Name"
 
-	sw := NewAligner(strings.NewReader(input), os.Stdout, ",", TextQualifier{On: false})
+	sw := NewAligner(strings.NewReader(input), os.Stdout, comma, TextQualifier{On: false})
 
 	b.ReportAllocs()
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_ = sw.SplitWithQual(input, ",", "\"")
+		_ = sw.SplitWithQual(input, comma, "\"")
 	}
 }

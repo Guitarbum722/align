@@ -25,6 +25,7 @@ Another use is to align blocks of code by `=` or `=>`, etc.
 
 ```sh
 $ go get github.com/Guitarbum722/true-up
+$ go install
 ```
 
 ### Usage - CLI examples
@@ -37,6 +38,7 @@ Options:
   -output      : output file. (defaults to stdout)
   -qual        : text qualifier (if applicable)
   -sep         : delimiter. (defaults to ',')
+  -outsep      : output delimiter (defaults to value of -sep)
   -left        : left justification. (default)
   -center      : center justification
   -right       : right justification

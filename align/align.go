@@ -45,6 +45,7 @@ type Alignable interface {
 	SplitWithQual(string, string, string) []string
 	ColumnSize(int) int
 	UpdatePadding(PaddingOpts)
+	OutputSep(string)
 }
 
 // TextQualifier is used to configure the scanner to account for a text qualifier
@@ -63,6 +64,7 @@ type Aligner struct {
 	S            *bufio.Scanner
 	W            *bufio.Writer
 	sep          string // separator string or delimiter
+	sepOut       string
 	columnCounts map[int]int
 	txtq         TextQualifier
 	padOpts      PaddingOpts
@@ -78,6 +80,7 @@ func NewAligner(in io.Reader, out io.Writer, sep string, qu TextQualifier) Align
 		S:            bufio.NewScanner(in),
 		W:            bufio.NewWriter(out),
 		sep:          sep,
+		sepOut:       sep,
 		columnCounts: make(map[int]int),
 		txtq:         qu,
 		padOpts: PaddingOpts{
@@ -92,9 +95,15 @@ func (a *Aligner) Init(in io.Reader, out io.Writer, sep string, qu TextQualifier
 	a.S = bufio.NewScanner(in)
 	a.W = bufio.NewWriter(out)
 	a.sep = sep
+	a.sepOut = sep
 	a.columnCounts = make(map[int]int)
 	a.txtq = qu
 	a.padOpts = pOpts
+}
+
+// OutputSep sets the output separator string with outsep if a different value from the input sep is desired.
+func (a *Aligner) OutputSep(outsep string) {
+	a.sepOut = outsep
 }
 
 // ColumnSize looks up the Aligner's columnCounts key with num and returns the value
@@ -201,7 +210,7 @@ func (a *Aligner) Export(lines []string) {
 				a.W.WriteString(word + "\n")
 				continue
 			}
-			a.W.WriteString(word + a.sep)
+			a.W.WriteString(word + a.sepOut)
 		}
 	}
 	a.W.Flush()
