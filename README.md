@@ -2,7 +2,6 @@
 _A general purpose package that aligns text_
 
 [![GoDoc](https://img.shields.io/badge/api-reference-blue.svg?style=flat-square)](https://godoc.org/github.com/Guitarbum722/true-up/align) 
-
 [![Build Status](https://travis-ci.org/Guitarbum722/true-up.svg?branch=master)](https://travis-ci.org/Guitarbum722/true-up)
 
 The focus of this package is to provide a fast, efficient, and useful library for aligning text.
@@ -100,3 +99,8 @@ or create an `Aligner` and call `Init()`
     lines := a.ColumnCounts()
     a.Export(lines)
 ```
+
+### Contributions
+
+If you have suggestions or discover a bug, please open an issue.  If you think you can make the fix,
+please use the Fork / Pull Request on your feature branch approach.
