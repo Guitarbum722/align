@@ -17,6 +17,7 @@ Options:
   -output      : output file. (defaults to stdout)
   -qual        : text qualifier (if applicable)
   -sep         : delimiter. (defaults to ',')
+  -outsep      : output delimiter (defaults to the value of sep)
   -left        : left justification. (default)
   -center      : center justification
   -right       : right justification
@@ -34,6 +35,7 @@ func run() (int, error) {
 
 	// defaults
 	sep := ","
+	var outSep string
 	var input io.Reader
 	var output io.Writer
 	var qu align.TextQualifier
@@ -51,6 +53,19 @@ func run() (int, error) {
 			return 1, err
 		}
 		sep = delimiter
+	}
+
+	if flags.Has("outsep", args) {
+		if len(args) < 2 {
+			return 1, errors.New("argument to -outsep required")
+		}
+		delimiter, err := flags.Value("outsep", args)
+		if err != nil {
+			return 1, err
+		}
+		outSep = delimiter
+	} else {
+		outSep = sep
 	}
 
 	// check for piped input, but use specified input file if supplied
@@ -129,6 +144,8 @@ func run() (int, error) {
 	}
 
 	lines := sw.ColumnCounts()
+
+	sw.OutputSep(outSep)
 	sw.Export(lines)
 
 	return 0, nil
