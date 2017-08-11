@@ -5,6 +5,10 @@ go:
   - 1.8.x
   - master
 
+os:
+  - linux
+  - osx
+  
 notifications:
   email:
     recipients:
