@@ -1,4 +1,4 @@
-package align
+package main
 
 import (
 	"os"
