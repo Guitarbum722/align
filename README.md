@@ -1,8 +1,8 @@
-# true-up
+# align
 _A general purpose package that aligns text_
 
-[![GoDoc](https://img.shields.io/badge/api-reference-blue.svg?style=flat-square)](https://godoc.org/github.com/Guitarbum722/true-up/align) 
-[![Build Status](https://travis-ci.org/Guitarbum722/true-up.svg?branch=master)](https://travis-ci.org/Guitarbum722/true-up)
+[![GoDoc](https://img.shields.io/badge/api-reference-blue.svg?style=flat-square)](https://godoc.org/github.com/Guitarbum722/align) 
+[![Build Status](https://travis-ci.org/Guitarbum722/align.svg?branch=master)](https://travis-ci.org/Guitarbum722/align)
 
 The focus of this package is to provide a fast, efficient, and useful library for aligning text.
 
@@ -24,14 +24,14 @@ Another use is to align blocks of code by `=` or `=>`, etc.
 ### Install
 
 ```sh
-$ go get github.com/Guitarbum722/true-up
+$ go get github.com/Guitarbum722/align
 $ go install
 ```
 
 ### Usage - CLI examples
 
 ```
-Usage: true-up [-sep] [-output] [-file] [-qual]
+Usage: align [-sep] [-output] [-file] [-qual]
 Options:
   -h | --help  : help
   -file        : input file.  If not specified, pipe input to stdin
@@ -49,57 +49,20 @@ _Specify your input file, output file, delimiter._
 If no `-output` option is provided, Stdout will be used.
 
 ```sh
-$ true-up -file input_file.csv -output output_file.csv
+$ align -file input_file.csv -output output_file.csv
 
-$ true-up -file input_file.csv -output 
+$ align -file input_file.csv -output 
 
-$ cat awesome.csv | true-up
+$ cat awesome.csv | align
 ```
 
-Do you have rows with a different number of fields?  This might be more common with code, but `true-up` doesn't care!
+Do you have rows with a different number of fields?  This might be more common with code, but `align` doesn't care!
 
 ```
-$ echo "field1|field2\nValue1|Value2\nCoolValue1|CoolValue2|CoolValue3" | true-up -sep \|
+$ echo "field1|field2\nValue1|Value2\nCoolValue1|CoolValue2|CoolValue3" | align -sep \|
 field1     | field2
 Value1     | Value2
 CoolValue1 | CoolValue2 | CoolValue3
-```
-
-### Usage - The True-Up library
-
-Initialize your `Aligner` which returns an `Alignable`.
-```go
-func main() {
-	aligner := align.NewAligner(strings.NewReader("one,two,three\nfour,five,six\nseven,eight,nine"),
-		os.Stdout,
-		",",
-		align.TextQualifier{On: false})
-
-	// update justification (default is JustifyLeft)
-	aligner.UpdatePadding(align.PaddingOpts{Justification: align.JustifyCenter})
-
-	lines := aligner.ColumnCounts()
-
-	aligner.Export(lines)
-}
-
-Output:
-one   , two   , three
-four  , five  , six
-seven , eight , nine
-
-```
-
-or create an `Aligner` and call `Init()`
-
-```go
-    s := &align.Aligner{}
-    s.Init(input, output, sep)
-```
-
-```go
-    lines := a.ColumnCounts()
-    a.Export(lines)
 ```
 
 ### Contributions

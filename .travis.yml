@@ -5,6 +5,10 @@ go:
   - 1.8.x
   - master
 
+os:
+  - linux
+  - osx
+  
 notifications:
   email:
     recipients:
@@ -13,4 +17,4 @@ notifications:
     on_failure: always 
 
 script:
-  - go test -v ./...
+  - go test -v

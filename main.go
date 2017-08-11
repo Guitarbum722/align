@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 
-	"github.com/Guitarbum722/true-up/align"
 	"github.com/fatih/flags"
 )
 
@@ -38,7 +37,7 @@ func run() (int, error) {
 	var outSep string
 	var input io.Reader
 	var output io.Writer
-	var qu align.TextQualifier
+	var qu TextQualifier
 
 	if flags.Has("h", args) || flags.Has("help", args) {
 		return 1, errors.New(usage)
@@ -127,20 +126,20 @@ func run() (int, error) {
 			return 1, err
 		}
 
-		qu = align.TextQualifier{
+		qu = TextQualifier{
 			On:        true,
 			Qualifier: q,
 		}
 	}
 
-	sw := align.NewAligner(input, output, sep, qu)
+	sw := NewAligner(input, output, sep, qu)
 
 	if flags.Has("left", args) {
-		sw.UpdatePadding(align.PaddingOpts{Justification: align.JustifyLeft})
+		sw.UpdatePadding(PaddingOpts{Justification: JustifyLeft})
 	} else if flags.Has("right", args) {
-		sw.UpdatePadding(align.PaddingOpts{Justification: align.JustifyRight})
+		sw.UpdatePadding(PaddingOpts{Justification: JustifyRight})
 	} else if flags.Has("center", args) {
-		sw.UpdatePadding(align.PaddingOpts{Justification: align.JustifyCenter})
+		sw.UpdatePadding(PaddingOpts{Justification: JustifyCenter})
 	}
 
 	lines := sw.ColumnCounts()
