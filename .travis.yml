@@ -13,4 +13,4 @@ notifications:
     on_failure: always 
 
 script:
-  - go test -v ./...
+  - go test -v
