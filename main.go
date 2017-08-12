@@ -9,17 +9,15 @@ import (
 	"github.com/fatih/flags"
 )
 
-const usage = `Usage: true-up [-sep] [-output] [-file] [-qual] [-jstfy]
+const usage = `Usage: align [-h] [-f] [-o] [-q] [-s] [-d] [-a]
 Options:
   -h | --help  : help
-  -file        : input file.  If not specified, pipe input to stdin
-  -output      : output file. (defaults to stdout)
-  -qual        : text qualifier (if applicable)
-  -sep         : delimiter. (defaults to ',')
-  -outsep      : output delimiter (defaults to the value of sep)
-  -left        : left justification. (default)
-  -center      : center justification
-  -right       : right justification
+  -f           : input file.  If not specified, pipe input to stdin
+  -o           : output file. (defaults to stdout)
+  -q           : text qualifier (if applicable)
+  -s           : delimiter. (defaults to ',')
+  -d           : output delimiter (defaults to the value of sep)
+  -a           : <left>, <right>, <center> justification (default: left)
 `
 
 func main() {
@@ -42,19 +40,19 @@ func run() (int, error) {
 		return 1, errors.New(usage)
 	}
 
-	if flags.Has("sep", args) {
-		val, err := flags.Value("sep", args)
+	if flags.Has("s", args) {
+		val, err := flags.Value("s", args)
 		if !validArg(err, val) {
-			return 1, errors.New("invalid entry for -sep \n" + usage)
+			return 1, errors.New("invalid entry for -s \n" + usage)
 		}
 		sep = val
 	}
 
-	if flags.Has("outsep", args) {
+	if flags.Has("d", args) {
 		outSep = sep
-		val, err := flags.Value("outsep", args)
+		val, err := flags.Value("d", args)
 		if !validArg(err, val) {
-			return 1, errors.New("invalid entry for -outsep \n" + usage)
+			return 1, errors.New("invalid entry for -d \n" + usage)
 		}
 		outSep = val
 	} else {
@@ -64,10 +62,10 @@ func run() (int, error) {
 	// check for piped input, but use specified input file if supplied
 	fi, _ := os.Stdin.Stat()
 	if (fi.Mode() & os.ModeCharDevice) == 0 {
-		if flags.Has("file", args) {
-			fn, err := flags.Value("file", args)
+		if flags.Has("f", args) {
+			fn, err := flags.Value("f", args)
 			if !validArg(err, fn) {
-				return 1, errors.New("invalid entry for -file \n" + usage)
+				return 1, errors.New("invalid entry for -f \n" + usage)
 			}
 
 			f, err := os.Open(fn)
@@ -80,10 +78,10 @@ func run() (int, error) {
 			input = os.Stdin
 		}
 	} else {
-		if flags.Has("file", args) {
-			fn, err := flags.Value("file", args)
+		if flags.Has("f", args) {
+			fn, err := flags.Value("f", args)
 			if !validArg(err, fn) {
-				return 1, errors.New("invalid entry for -file \n" + usage)
+				return 1, errors.New("invalid entry for -f \n" + usage)
 			}
 
 			f, err := os.Open(fn)
@@ -98,10 +96,10 @@ func run() (int, error) {
 	}
 
 	// if --output flag is not provided with a file name, then use Stdout
-	if flags.Has("output", args) {
-		fn, err := flags.Value("output", args)
+	if flags.Has("o", args) {
+		fn, err := flags.Value("o", args)
 		if !validArg(err, fn) {
-			return 1, errors.New("invalid entry for -output \n" + usage)
+			return 1, errors.New("invalid entry for -o \n" + usage)
 		}
 		f, err := os.Create(fn)
 		if err != nil {
@@ -113,10 +111,10 @@ func run() (int, error) {
 		output = os.Stdout
 	}
 
-	if flags.Has("qual", args) {
-		q, err := flags.Value("qual", args)
+	if flags.Has("q", args) {
+		q, err := flags.Value("q", args)
 		if !validArg(err, q) {
-			return 1, errors.New("invalid entry for -qual \n" + usage)
+			return 1, errors.New("invalid entry for -q \n" + usage)
 		}
 
 		qu = TextQualifier{
@@ -127,12 +125,21 @@ func run() (int, error) {
 
 	sw := NewAligner(input, output, sep, qu)
 
-	if flags.Has("left", args) {
-		sw.UpdatePadding(PaddingOpts{Justification: JustifyLeft})
-	} else if flags.Has("right", args) {
-		sw.UpdatePadding(PaddingOpts{Justification: JustifyRight})
-	} else if flags.Has("center", args) {
-		sw.UpdatePadding(PaddingOpts{Justification: JustifyCenter})
+	if flags.Has("a", args) {
+		val, err := flags.Value("a", args)
+		if !validArg(err, val) {
+			return 1, errors.New("invalid entry for -a \n" + usage)
+		}
+		switch val {
+		case "left":
+			sw.UpdatePadding(PaddingOpts{Justification: JustifyLeft})
+		case "right":
+			sw.UpdatePadding(PaddingOpts{Justification: JustifyRight})
+		case "center":
+			sw.UpdatePadding(PaddingOpts{Justification: JustifyCenter})
+		default:
+			sw.UpdatePadding(PaddingOpts{Justification: JustifyLeft})
+		}
 	}
 
 	lines := sw.ColumnCounts()
