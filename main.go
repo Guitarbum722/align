@@ -28,7 +28,11 @@ func main() {
 }
 
 func run() (int, error) {
-	args := os.Args[1:]
+	var args []string
+	if len(args) == 0 {
+		return 1, errors.New(usage)
+	}
+	args = os.Args[1:]
 
 	sep := "," // default
 	var outSep string
