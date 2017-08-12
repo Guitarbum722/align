@@ -32,8 +32,7 @@ func main() {
 func run() (int, error) {
 	args := os.Args[1:]
 
-	// defaults
-	sep := ","
+	sep := "," // default
 	var outSep string
 	var input io.Reader
 	var output io.Writer
@@ -44,25 +43,20 @@ func run() (int, error) {
 	}
 
 	if flags.Has("sep", args) {
-		if len(args) < 2 {
-			return 1, errors.New("argument to -sep required")
+		val, err := flags.Value("sep", args)
+		if !validArg(err, val) {
+			return 1, errors.New("invalid entry for -sep \n" + usage)
 		}
-		delimiter, err := flags.Value("sep", args)
-		if err != nil {
-			return 1, err
-		}
-		sep = delimiter
+		sep = val
 	}
 
 	if flags.Has("outsep", args) {
-		if len(args) < 2 {
-			return 1, errors.New("argument to -outsep required")
+		outSep = sep
+		val, err := flags.Value("outsep", args)
+		if !validArg(err, val) {
+			return 1, errors.New("invalid entry for -outsep \n" + usage)
 		}
-		delimiter, err := flags.Value("outsep", args)
-		if err != nil {
-			return 1, err
-		}
-		outSep = delimiter
+		outSep = val
 	} else {
 		outSep = sep
 	}
@@ -72,9 +66,10 @@ func run() (int, error) {
 	if (fi.Mode() & os.ModeCharDevice) == 0 {
 		if flags.Has("file", args) {
 			fn, err := flags.Value("file", args)
-			if err != nil {
-				return 1, err
+			if !validArg(err, fn) {
+				return 1, errors.New("invalid entry for -file \n" + usage)
 			}
+
 			f, err := os.Open(fn)
 			if err != nil {
 				return 1, err
@@ -87,9 +82,10 @@ func run() (int, error) {
 	} else {
 		if flags.Has("file", args) {
 			fn, err := flags.Value("file", args)
-			if err != nil {
-				return 1, err
+			if !validArg(err, fn) {
+				return 1, errors.New("invalid entry for -file \n" + usage)
 			}
+
 			f, err := os.Open(fn)
 			if err != nil {
 				return 1, err
@@ -97,18 +93,15 @@ func run() (int, error) {
 			defer f.Close()
 			input = f
 		} else {
-			return 1, errors.New("no input provided")
+			return 1, errors.New("no input provided \n" + usage)
 		}
 	}
 
 	// if --output flag is not provided with a file name, then use Stdout
 	if flags.Has("output", args) {
-		if len(args) < 2 {
-			return 1, errors.New("argument to -output required")
-		}
 		fn, err := flags.Value("output", args)
-		if err != nil {
-			return 1, err
+		if !validArg(err, fn) {
+			return 1, errors.New("invalid entry for -output \n" + usage)
 		}
 		f, err := os.Create(fn)
 		if err != nil {
@@ -122,8 +115,8 @@ func run() (int, error) {
 
 	if flags.Has("qual", args) {
 		q, err := flags.Value("qual", args)
-		if err != nil {
-			return 1, err
+		if !validArg(err, q) {
+			return 1, errors.New("invalid entry for -qual \n" + usage)
 		}
 
 		qu = TextQualifier{
@@ -148,4 +141,11 @@ func run() (int, error) {
 	sw.Export(lines)
 
 	return 0, nil
+}
+
+func validArg(err error, arg string) bool {
+	if err != nil || arg == "" {
+		return false
+	}
+	return true
 }
