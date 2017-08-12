@@ -83,6 +83,65 @@ var columnCountCases = []struct {
 	},
 }
 
+var fieldLenCases = []struct {
+	input    string
+	sep      string
+	expected int
+}{
+	{
+		"first,last",
+		",",
+		5,
+	},
+	{
+		"phone-number||email",
+		"||",
+		12,
+	},
+}
+
+var fieldLenEscapedCases = []struct {
+	input    string
+	sep      string
+	qual     string
+	expected int
+}{
+	{
+		"\"address1, address2\",last",
+		",",
+		"\"",
+		20,
+	},
+	{
+		"'expenseline2|expenseline2'||email",
+		"||",
+		"'",
+		27,
+	},
+}
+
+var countPaddingCases = []struct {
+	input    string
+	fieldLen int
+	expected int
+}{
+	{
+		"Roy",
+		10,
+		7,
+	},
+	{
+		"S",
+		20,
+		19,
+	},
+	{
+		"Luü",
+		5,
+		2,
+	},
+}
+
 func TestColumnCounts(t *testing.T) {
 	for _, tt := range columnCountCases {
 		aligner := NewAligner(strings.NewReader(tt.input), os.Stdout, tt.sep, TextQualifier{On: tt.isQual, Qualifier: tt.qual})
@@ -91,6 +150,33 @@ func TestColumnCounts(t *testing.T) {
 			if aligner.ColumnSize(i) != tt.counts[i] {
 				t.Fatalf("Count for column %v = %v, want %v", i, aligner.ColumnSize(i), tt.counts[i])
 			}
+		}
+	}
+}
+
+func TestFieldLenEscaped(t *testing.T) {
+	for _, tt := range fieldLenEscapedCases {
+		got := FieldLenEscaped(tt.input, tt.sep, tt.qual)
+		if got != tt.expected {
+			t.Fatalf("FieldLenEscaped(%v) = %v; want %v", tt.input, got, tt.expected)
+		}
+	}
+}
+
+func TestFieldLen(t *testing.T) {
+	for _, tt := range fieldLenCases {
+		got := FieldLen(tt.input, tt.sep)
+		if got != tt.expected {
+			t.Fatalf("FieldLen(%v) = %v; want %v", tt.input, got, tt.expected)
+		}
+	}
+}
+
+func TestCountPadding(t *testing.T) {
+	for _, tt := range countPaddingCases {
+		got := countPadding(tt.input, tt.fieldLen)
+		if got != tt.expected {
+			t.Fatalf("countPadding(%v) = %v; want %v", tt.input, got, tt.expected)
 		}
 	}
 }
