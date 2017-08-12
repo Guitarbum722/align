@@ -29,7 +29,7 @@ func main() {
 
 func run() (int, error) {
 	var args []string
-	if len(args) == 0 {
+	if len(os.Args[1:]) == 0 {
 		return 1, errors.New(usage)
 	}
 	args = os.Args[1:]
@@ -53,7 +53,6 @@ func run() (int, error) {
 	}
 
 	if flags.Has("d", args) {
-		outSep = sep
 		val, err := flags.Value("d", args)
 		if !validArg(err, val) {
 			return 1, errors.New("invalid entry for -d \n" + usage)
