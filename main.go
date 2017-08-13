@@ -11,13 +11,13 @@ import (
 
 const usage = `Usage: align [-h] [-f] [-o] [-q] [-s] [-d] [-a]
 Options:
-  -h | --help  : help
-  -f           : input file.  If not specified, pipe input to stdin
-  -o           : output file. (defaults to stdout)
-  -q           : text qualifier (if applicable)
-  -s           : delimiter. (defaults to ',')
-  -d           : output delimiter (defaults to the value of sep)
-  -a           : <left>, <right>, <center> justification (default: left)
+  -h | --help  help
+  -f           input file.  If not specified, pipe input to stdin
+  -o           output file. (default: stdout)
+  -q           text qualifier (if applicable)
+  -s           delimiter (default: ',')
+  -d           output delimiter (defaults to the value of sep)
+  -a           <left>, <right>, <center> justification (default: left)
 `
 
 func main() {
