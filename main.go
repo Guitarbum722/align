@@ -28,9 +28,17 @@ func main() {
 }
 
 func run() (int, error) {
+
+	// check for piped input, but use specified input file if supplied
+	fi, _ := os.Stdin.Stat()
+	isPiped := (fi.Mode() & os.ModeCharDevice) == 0
+
 	var args []string
-	if len(os.Args[1:]) == 0 {
-		return 1, errors.New(usage)
+
+	if !isPiped {
+		if len(os.Args[1:]) == 0 {
+			return 1, errors.New(usage)
+		}
 	}
 	args = os.Args[1:]
 
@@ -44,27 +52,7 @@ func run() (int, error) {
 		return 1, errors.New(usage)
 	}
 
-	if flags.Has("s", args) {
-		val, err := flags.Value("s", args)
-		if !validArg(err, val) {
-			return 1, errors.New("invalid entry for -s \n" + usage)
-		}
-		sep = val
-	}
-
-	if flags.Has("d", args) {
-		val, err := flags.Value("d", args)
-		if !validArg(err, val) {
-			return 1, errors.New("invalid entry for -d \n" + usage)
-		}
-		outSep = val
-	} else {
-		outSep = sep
-	}
-
-	// check for piped input, but use specified input file if supplied
-	fi, _ := os.Stdin.Stat()
-	if (fi.Mode() & os.ModeCharDevice) == 0 {
+	if isPiped {
 		if flags.Has("f", args) {
 			fn, err := flags.Value("f", args)
 			if !validArg(err, fn) {
@@ -96,6 +84,24 @@ func run() (int, error) {
 		} else {
 			return 1, errors.New("no input provided \n" + usage)
 		}
+	}
+
+	if flags.Has("s", args) {
+		val, err := flags.Value("s", args)
+		if !validArg(err, val) {
+			return 1, errors.New("invalid entry for -s \n" + usage)
+		}
+		sep = val
+	}
+
+	if flags.Has("d", args) {
+		val, err := flags.Value("d", args)
+		if !validArg(err, val) {
+			return 1, errors.New("invalid entry for -d \n" + usage)
+		}
+		outSep = val
+	} else {
+		outSep = sep
 	}
 
 	// if --output flag is not provided with a file name, then use Stdout
