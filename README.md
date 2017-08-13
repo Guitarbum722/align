@@ -61,6 +61,12 @@ Value1     | Value2
 CoolValue1 | CoolValue2 | CoolValue3
 ```
 
+It is perfectly acceptable to even use emojis as your input/output delimiters.
+```
+first  😮 last     😮 email
+Hector 😮 Gonzalez 😮 h.g@nothing.com
+```
+
 ### Contributions
 
 If you have suggestions or discover a bug, please open an issue.  If you think you can make the fix, please use the Fork / Pull Request on your feature branch approach.
