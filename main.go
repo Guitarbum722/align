@@ -20,6 +20,24 @@ Options:
   -a           <left>, <right>, <center> justification (default: left)
 `
 
+var definedFlags = []string{
+	"-h",
+	"-help",
+	"--help",
+	"-f",
+	"--f",
+	"-o",
+	"--o",
+	"-q",
+	"--q",
+	"-s",
+	"--s",
+	"-d",
+	"--d",
+	"-a",
+	"--a",
+}
+
 func main() {
 	if retval, err := run(); err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
@@ -87,11 +105,20 @@ func run() (int, error) {
 	}
 
 	if flags.Has("s", args) {
-		val, err := flags.Value("s", args)
-		if !validArg(err, val) {
-			return 1, errors.New("invalid entry for -s \n" + usage)
+
+		// see if the value supplied for -s starts with a hyphen to avoid confusion as if it were a flag
+		if isHyphen, val := hasHyphen(args, "-s"); isHyphen {
+			if isFlag(val) {
+				return 1, errors.New("invalid entry for -s \n" + usage)
+			}
+			sep = val
+		} else {
+			val, err := flags.Value("s", args)
+			if !validArg(err, val) {
+				return 1, errors.New("invalid entry for -s \n" + usage)
+			}
+			sep = val
 		}
-		sep = val
 	}
 
 	if flags.Has("d", args) {
@@ -164,4 +191,31 @@ func validArg(err error, arg string) bool {
 		return false
 	}
 	return true
+}
+
+// for validation
+func hasHyphen(args []string, check string) (bool, string) {
+	var idx int
+	for i, j := range args {
+		if j == check {
+			idx = i
+		}
+	}
+
+	var hasHyphen bool
+	var val string
+	if idx < len(args)-1 && string(args[idx+1][0]) == "-" {
+		hasHyphen = true
+		val = args[idx+1]
+	}
+	return hasHyphen, val
+}
+
+func isFlag(arg string) bool {
+	for _, v := range definedFlags {
+		if arg == v {
+			return true
+		}
+	}
+	return false
 }
