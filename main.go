@@ -19,15 +19,6 @@ Options:
   -a           <left>, <right>, <center> justification (default: left)
 `
 
-var hFlag *bool
-var helpFlag *bool
-var fFlag *string
-var oFlag *string
-var qFlag *string
-var sFlag *string
-var dFlag *string
-var aFlag *string
-
 func main() {
 	if retval, err := run(); err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
@@ -41,7 +32,20 @@ func run() (int, error) {
 		fmt.Fprintf(os.Stderr, usage)
 	}
 
-	parseFlags() // parse command line args
+	hFlag := flag.Bool("h", false, usage)
+	helpFlag := flag.Bool("help", false, usage)
+	fFlag := flag.String("f", "", "")
+	oFlag := flag.String("o", "", "")
+	qFlag := flag.String("q", "", "")
+	sFlag := flag.String("s", ",", "")
+	dFlag := flag.String("d", "", "")
+	aFlag := flag.String("a", "left", "")
+
+	flag.Parse()
+
+	if *dFlag == "" {
+		*dFlag = *sFlag
+	}
 
 	// check for piped input, but use specified input file if supplied
 	fi, _ := os.Stdin.Stat()
@@ -121,21 +125,4 @@ func run() (int, error) {
 	sw.Export(lines)
 
 	return 0, nil
-}
-
-func parseFlags() {
-	hFlag = flag.Bool("h", false, usage)
-	helpFlag = flag.Bool("help", false, usage)
-	fFlag = flag.String("f", "", "")
-	oFlag = flag.String("o", "", "")
-	qFlag = flag.String("q", "", "")
-	sFlag = flag.String("s", ",", "")
-	dFlag = flag.String("d", "", "")
-	aFlag = flag.String("a", "left", "")
-
-	flag.Parse()
-
-	if *dFlag == "" {
-		*dFlag = *sFlag
-	}
 }
