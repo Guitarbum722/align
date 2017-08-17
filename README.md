@@ -5,6 +5,7 @@ _A general purpose application that aligns text_
 [![Build Status](https://travis-ci.org/Guitarbum722/align.svg?branch=master)](https://travis-ci.org/Guitarbum722/align)
 
 The focus of this application is to provide a fast, efficient, and useful tool for aligning text.
+Its creation is the result of inspiration from several other amazing alignment tools, namely [`column`](http://man7.org/linux/man-pages/man1/column.1.html) or the Sublime Text plugin [`AlignTab`](https://github.com/randy3k/AlignTab).
 
 ### Included
 

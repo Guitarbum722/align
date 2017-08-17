@@ -7,27 +7,7 @@ import (
 	"unicode/utf8"
 )
 
-// Commonly used file delimiters or alignment characters
-const (
-	Comma    = ','
-	VertPipe = '|'
-	Star     = '*'
-	Tab      = '\t'
-	Equal    = '='
-	GThan    = '>'
-	LThan    = '<'
-	Hyphen   = '-'
-	Plus     = '+'
-	RParen   = ')'
-	LParen   = '('
-)
-
-// Various values to be used by consuming programs
-const (
-	SingleSpace = " "
-	DoubleQuote = "\""
-	SingleQuote = "'"
-)
+const singleSpace = " "
 
 type justification byte
 
@@ -238,9 +218,9 @@ func pad(s string, columnNum, count int, p PaddingOpts) string {
 
 	// at least one space to pad every field after the delimiter for readability
 	if columnNum > 0 {
-		s = SingleSpace + s
+		s = singleSpace + s
 	}
-	s = s + SingleSpace
+	s = s + singleSpace
 
 	return s
 }
