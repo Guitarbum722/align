@@ -106,23 +106,23 @@ func run() (int, error) {
 		}
 	}
 
-	sw := NewAligner(input, output, *sFlag, qu)
+	aligner := NewAligner(input, output, *sFlag, qu)
 
 	switch *aFlag {
 	case "left":
-		sw.UpdatePadding(PaddingOpts{Justification: JustifyLeft})
+		aligner.UpdatePadding(PaddingOpts{Justification: JustifyLeft})
 	case "right":
-		sw.UpdatePadding(PaddingOpts{Justification: JustifyRight})
+		aligner.UpdatePadding(PaddingOpts{Justification: JustifyRight})
 	case "center":
-		sw.UpdatePadding(PaddingOpts{Justification: JustifyCenter})
+		aligner.UpdatePadding(PaddingOpts{Justification: JustifyCenter})
 	default:
-		sw.UpdatePadding(PaddingOpts{Justification: JustifyLeft})
+		aligner.UpdatePadding(PaddingOpts{Justification: JustifyLeft})
 	}
 
-	lines := sw.ColumnCounts()
+	lines := aligner.ColumnCounts()
 
-	sw.OutputSep(*dFlag)
-	sw.Export(lines)
+	aligner.OutputSep(*dFlag)
+	aligner.Export(lines)
 
 	return 0, nil
 }
