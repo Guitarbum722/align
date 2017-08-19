@@ -144,11 +144,11 @@ var countPaddingCases = []struct {
 
 func TestColumnCounts(t *testing.T) {
 	for _, tt := range columnCountCases {
-		aligner := NewAligner(strings.NewReader(tt.input), os.Stdout, tt.sep, TextQualifier{On: tt.isQual, Qualifier: tt.qual})
-		aligner.ColumnCounts()
+		a := newAlign(strings.NewReader(tt.input), os.Stdout, tt.sep, TextQualifier{On: tt.isQual, Qualifier: tt.qual})
+		a.columnLength()
 		for i := range tt.counts {
-			if aligner.ColumnSize(i) != tt.counts[i] {
-				t.Fatalf("Count for column %v = %v, want %v", i, aligner.ColumnSize(i), tt.counts[i])
+			if a.columnSize(i) != tt.counts[i] {
+				t.Fatalf("Count for column %v = %v, want %v", i, a.columnSize(i), tt.counts[i])
 			}
 		}
 	}
@@ -156,7 +156,7 @@ func TestColumnCounts(t *testing.T) {
 
 func TestFieldLenEscaped(t *testing.T) {
 	for _, tt := range fieldLenEscapedCases {
-		got := FieldLenEscaped(tt.input, tt.sep, tt.qual)
+		got := fieldLenEscaped(tt.input, tt.sep, tt.qual)
 		if got != tt.expected {
 			t.Fatalf("FieldLenEscaped(%v) = %v; want %v", tt.input, got, tt.expected)
 		}
@@ -165,7 +165,7 @@ func TestFieldLenEscaped(t *testing.T) {
 
 func TestFieldLen(t *testing.T) {
 	for _, tt := range fieldLenCases {
-		got := FieldLen(tt.input, tt.sep)
+		got := fieldLen(tt.input, tt.sep)
 		if got != tt.expected {
 			t.Fatalf("FieldLen(%v) = %v; want %v", tt.input, got, tt.expected)
 		}
@@ -191,38 +191,38 @@ Karleigh,Destiny,Dean,nunc.In@lorem.edu,Stockholms län,Märsta,9038,Shaine Reil
 Alisa,Walker,Armand,Sed@Nuncmauriselit.com,Himachal Pradesh,Shimla,MZ0 4QS,Olivia Velez ,Alisa,Walker,Armand,Sed@Nuncmauriselit.com,Himachal Pradesh,Shimla,MZ0 4QS,Olivia Velez ,Alisa,Walker,Armand,Sed@Nuncmauriselit.com,Himachal Pradesh,Shimla,MZ0 4QS,Olivia Velez         
 `
 
-	sw := NewAligner(strings.NewReader(input), os.Stdout, comma, TextQualifier{On: false})
+	a := newAlign(strings.NewReader(input), os.Stdout, comma, TextQualifier{On: false})
 
 	b.ReportAllocs()
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_ = sw.ColumnCounts()
+		_ = a.columnLength()
 	}
 }
 
 func BenchmarkSplitWithQual(b *testing.B) {
 	input := "First,\"Middle, name\",Last,Email,Region,City,Zip,Full_Name"
 
-	sw := NewAligner(strings.NewReader(input), os.Stdout, comma, TextQualifier{On: true, Qualifier: "\""})
+	a := newAlign(strings.NewReader(input), os.Stdout, comma, TextQualifier{On: true, Qualifier: "\""})
 
 	b.ReportAllocs()
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_ = sw.SplitWithQual(input, comma, "\"")
+		_ = a.splitWithQual(input, comma, "\"")
 	}
 }
 
 func BenchmarkSplitWithQualNoQual(b *testing.B) {
 	input := "First,Middle,Last,Email,Region,City,Zip,Full_Name"
 
-	sw := NewAligner(strings.NewReader(input), os.Stdout, comma, TextQualifier{On: false})
+	a := newAlign(strings.NewReader(input), os.Stdout, comma, TextQualifier{On: false})
 
 	b.ReportAllocs()
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_ = sw.SplitWithQual(input, comma, "\"")
+		_ = a.splitWithQual(input, comma, "\"")
 	}
 }

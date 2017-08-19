@@ -18,15 +18,9 @@ const (
 	JustifyLeft
 )
 
-// Alignable ...
-type Alignable interface {
-	ColumnCounts() []string
-	Export([]string)
-	SplitWithQual(string, string, string) []string
-	ColumnSize(int) int
-	UpdatePadding(PaddingOpts)
-	OutputSep(string)
-	filterColumns([]int)
+// Aligner aligns text based on configuration and options
+type Aligner interface {
+	Align()
 }
 
 // TextQualifier is used to configure the scanner to account for a text qualifier
@@ -40,8 +34,8 @@ type PaddingOpts struct {
 	Justification justification
 }
 
-// Aligner scans input and writes output
-type Aligner struct {
+// Align scans input and writes output with aligned text
+type Align struct {
 	S            *bufio.Scanner
 	W            *bufio.Writer
 	sep          string // separator string or delimiter
@@ -53,13 +47,13 @@ type Aligner struct {
 	filterLen    int
 }
 
-// NewAligner creates and initializes a ScanWriter with in and out as its initial Reader and Writer
+// NewAlign creates and initializes a ScanWriter with in and out as its initial Reader and Writer
 // and sets del to the desired delimiter to be used for alignment.
 // It is meant to read the contents of its io.Reader to determine the length of each field
 // and output the results in an aligned format.
 // Left justification is used by default.  See UpdatePadding to set the justification.
-func NewAligner(in io.Reader, out io.Writer, sep string, qu TextQualifier) Alignable {
-	return &Aligner{
+func newAlign(in io.Reader, out io.Writer, sep string, qu TextQualifier) *Align {
+	return &Align{
 		S:            bufio.NewScanner(in),
 		W:            bufio.NewWriter(out),
 		sep:          sep,
@@ -72,49 +66,44 @@ func NewAligner(in io.Reader, out io.Writer, sep string, qu TextQualifier) Align
 	}
 }
 
-// Init accepts the same arguments as NewAligner.  It simply provides another option
-// for initializing an Aligner which is already allocated.
-func (a *Aligner) Init(in io.Reader, out io.Writer, sep string, qu TextQualifier, pOpts PaddingOpts) {
-	a.S = bufio.NewScanner(in)
-	a.W = bufio.NewWriter(out)
-	a.sep = sep
-	a.sepOut = sep
-	a.columnCounts = make(map[int]int)
-	a.txtq = qu
-	a.padOpts = pOpts
-}
-
-// OutputSep sets the output separator string with outsep if a different value from the input sep is desired.
-func (a *Aligner) OutputSep(outsep string) {
+// outputSep sets the output separator string with outsep if a different value from the input sep is desired.
+func (a *Align) outputSep(outsep string) {
 	a.sepOut = outsep
 }
 
-// ColumnSize looks up the Aligner's columnCounts key with num and returns the value
+// Align determines the length of each field of text around the configured delimiter and aligns all of the
+// text by the delimiter.
+func (a *Align) Align() {
+	lines := a.columnLength()
+	a.export(lines)
+}
+
+// columnSize looks up the Aligner's columnCounts key with num and returns the value
 // that was set by ColumnCounts().
 // If num is not a valid key in Aligner.columnCounts, then -1 is returned.
-func (a *Aligner) ColumnSize(num int) int {
+func (a *Align) columnSize(num int) int {
 	if _, ok := a.columnCounts[num]; !ok {
 		return -1
 	}
 	return a.columnCounts[num]
 }
 
-// UpdatePadding uses PaddingOpts p to update the Aligner's padding options.
-func (a *Aligner) UpdatePadding(p PaddingOpts) {
+// updatePadding uses PaddingOpts p to update the Aligner's padding options.
+func (a *Align) updatePadding(p PaddingOpts) {
 	a.padOpts = p
 }
 
-// FieldLen works in a similar manner to the standard lib function strings.Index().
+// fieldLen works in a similar manner to the standard lib function strings.Index().
 // Instead of returning the index of the first instance of sep, it returns the length
 // of s before the first index of sep.
-func FieldLen(s, sep string) int {
+func fieldLen(s, sep string) int {
 	return genFieldLen(s, sep, "")
 }
 
-// FieldLenEscaped works in the same way as FieldLen, but a text qualifer string can
+// fieldLenEscaped works in the same way as FieldLen, but a text qualifer string can
 // be provided.  If qual is an empty string, then the behavior will be exactly the same
 // as FieldLen.
-func FieldLenEscaped(s, sep, qual string) int {
+func fieldLenEscaped(s, sep, qual string) int {
 	return genFieldLen(s, sep, qual)
 }
 
@@ -138,10 +127,10 @@ func genFieldLen(s, sep, qual string) int {
 	return len(s[:i])
 }
 
-// ColumnCounts scans the input and determines the maximum length of each field based on
+// columnLength scans the input and determines the maximum length of each field based on
 // the longest value for each field in all of the pertaining lines.
 // All of the lines of the io.Reader are returned as a string slice.
-func (a *Aligner) ColumnCounts() []string {
+func (a *Align) columnLength() []string {
 	var lines []string
 	for a.S.Scan() {
 		var columnNum int
@@ -151,7 +140,7 @@ func (a *Aligner) ColumnCounts() []string {
 
 		if a.txtq.On {
 			for start := 0; start < len(line); {
-				temp = FieldLenEscaped(line[start:], a.sep, a.txtq.Qualifier)
+				temp = fieldLenEscaped(line[start:], a.sep, a.txtq.Qualifier)
 				start += temp + len(a.sep)
 				if temp > a.columnCounts[columnNum] {
 					a.columnCounts[columnNum] = temp
@@ -161,7 +150,7 @@ func (a *Aligner) ColumnCounts() []string {
 			}
 		} else {
 			for start := 0; start < len(line); {
-				temp = FieldLen(line[start:], a.sep)
+				temp = fieldLen(line[start:], a.sep)
 				start += temp + len(a.sep)
 				if temp > a.columnCounts[columnNum] {
 					a.columnCounts[columnNum] = temp
@@ -177,10 +166,10 @@ func (a *Aligner) ColumnCounts() []string {
 	return lines
 }
 
-// Export will pad each field in lines based on the Aligner's column counts
-func (a *Aligner) Export(lines []string) {
+// export will pad each field in lines based on the Aligner's column counts
+func (a *Align) export(lines []string) {
 	for _, line := range lines {
-		words := a.SplitWithQual(line, a.sep, a.txtq.Qualifier)
+		words := a.splitWithQual(line, a.sep, a.txtq.Qualifier)
 
 		var columnNum int
 		var tempColumn int // used for call to pad() to incorporate column filtering
@@ -275,8 +264,8 @@ func trailingPad(s string, padLen int) string {
 	return s + string(pad)
 }
 
-// SplitWithQual basically works like the standard strings.Split() func, but will consider a text qualifier if set.
-func (a *Aligner) SplitWithQual(s, sep, qual string) []string {
+// splitWithQual basically works like the standard strings.Split() func, but will consider a text qualifier if set.
+func (a *Align) splitWithQual(s, sep, qual string) []string {
 
 	if !a.txtq.On {
 		return strings.Split(s, sep) // use standard Split() method if no qualifier is considered
@@ -292,7 +281,7 @@ func (a *Aligner) SplitWithQual(s, sep, qual string) []string {
 	return words
 }
 
-func (a *Aligner) filterColumns(c []int) {
+func (a *Align) filterColumns(c []int) {
 	a.filter = c
 	a.filterLen = len(c)
 }
