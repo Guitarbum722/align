@@ -123,7 +123,9 @@ func run() (int, error) {
 			if err != nil {
 				return 1, errors.New("make sure entry for -c are numbers (ie 1,2,5,7)")
 			}
-			outColumns = append(outColumns, num)
+			if num > 0 {
+				outColumns = append(outColumns, num)
+			}
 		}
 		sort.Ints(outColumns)
 	}
