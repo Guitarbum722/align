@@ -39,6 +39,7 @@ Options:
   -s           delimiter (default: ',')
   -d           output delimiter (defaults to the value of sep)
   -a           <left>, <right>, <center> justification (default: left)
+  -c           output specific fields (default: all fields)
 ```
 
 _Specify your input file, output file, delimiter._

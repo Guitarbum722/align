@@ -26,6 +26,7 @@ type Alignable interface {
 	ColumnSize(int) int
 	UpdatePadding(PaddingOpts)
 	OutputSep(string)
+	filterColumns([]int)
 }
 
 // TextQualifier is used to configure the scanner to account for a text qualifier
@@ -48,6 +49,8 @@ type Aligner struct {
 	columnCounts map[int]int
 	txtq         TextQualifier
 	padOpts      PaddingOpts
+	filter       []int
+	filterLen    int
 }
 
 // NewAligner creates and initializes a ScanWriter with in and out as its initial Reader and Writer
@@ -180,15 +183,30 @@ func (a *Aligner) Export(lines []string) {
 		words := a.SplitWithQual(line, a.sep, a.txtq.Qualifier)
 
 		var columnNum int
+		var tempColumn int // used for call to pad() to incorporate column filtering
 		for _, word := range words {
-			word = pad(word, columnNum, a.columnCounts[columnNum], a.padOpts)
+			if a.filterLen > 0 {
+				if !contains(a.filter, columnNum+1) {
+					columnNum++
+					if columnNum == len(words) {
+						a.W.WriteString("\n")
+					}
+					continue
+				}
+			}
+
+			word = pad(word, tempColumn, a.columnCounts[columnNum], a.padOpts)
 			columnNum++
+			tempColumn++
 
 			// Do not add a delimiter to the last field
 			// This also properly aligns the output even if there are lines with a different number of fields
-			if columnNum == len(words) {
+			if a.filterLen > 0 && a.filter[a.filterLen-1] == columnNum {
 				a.W.WriteString(word + "\n")
-				continue
+				break
+			} else if columnNum == len(words) {
+				a.W.WriteString(word + "\n")
+				break
 			}
 			a.W.WriteString(word + a.sepOut)
 		}
@@ -272,4 +290,18 @@ func (a *Aligner) SplitWithQual(s, sep, qual string) []string {
 	}
 
 	return words
+}
+
+func (a *Aligner) filterColumns(c []int) {
+	a.filter = c
+	a.filterLen = len(c)
+}
+
+func contains(nums []int, num int) bool {
+	for _, v := range nums {
+		if v == num {
+			return true
+		}
+	}
+	return false
 }

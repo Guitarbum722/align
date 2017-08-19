@@ -6,6 +6,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sort"
+	"strconv"
+	"strings"
 )
 
 const usage = `Usage: align [-h] [-f] [-o] [-q] [-s] [-d] [-a]
@@ -17,7 +20,8 @@ Options:
   -s           delimiter (default: ',')
   -d           output delimiter (defaults to the value of sep)
   -a           <left>, <right>, <center> justification (default: left)
-`
+  -c           output specific fields (default: all fields)
+  `
 
 func main() {
 	if retval, err := run(); err != nil {
@@ -40,6 +44,7 @@ func run() (int, error) {
 	sFlag := flag.String("s", ",", "")
 	dFlag := flag.String("d", "", "")
 	aFlag := flag.String("a", "left", "")
+	cFlag := flag.String("c", "", "")
 
 	flag.Parse()
 
@@ -106,23 +111,44 @@ func run() (int, error) {
 		}
 	}
 
-	sw := NewAligner(input, output, *sFlag, qu)
+	var outColumns []int
+
+	if *cFlag != "" {
+		c := strings.Split(*cFlag, ",")
+		outColumns = make([]int, 0, len(c))
+
+		// validate specified field numbers and sort them
+		for _, v := range c {
+			num, err := strconv.Atoi(v)
+			if err != nil {
+				return 1, errors.New("make sure entry for -c are numbers (ie 1,2,5,7)")
+			}
+			if num > 0 {
+				outColumns = append(outColumns, num)
+			}
+		}
+		sort.Ints(outColumns)
+	}
+
+	aligner := NewAligner(input, output, *sFlag, qu)
 
 	switch *aFlag {
 	case "left":
-		sw.UpdatePadding(PaddingOpts{Justification: JustifyLeft})
+		aligner.UpdatePadding(PaddingOpts{Justification: JustifyLeft})
 	case "right":
-		sw.UpdatePadding(PaddingOpts{Justification: JustifyRight})
+		aligner.UpdatePadding(PaddingOpts{Justification: JustifyRight})
 	case "center":
-		sw.UpdatePadding(PaddingOpts{Justification: JustifyCenter})
+		aligner.UpdatePadding(PaddingOpts{Justification: JustifyCenter})
 	default:
-		sw.UpdatePadding(PaddingOpts{Justification: JustifyLeft})
+		aligner.UpdatePadding(PaddingOpts{Justification: JustifyLeft})
 	}
 
-	lines := sw.ColumnCounts()
+	aligner.filterColumns(outColumns)
 
-	sw.OutputSep(*dFlag)
-	sw.Export(lines)
+	lines := aligner.ColumnCounts()
+
+	aligner.OutputSep(*dFlag)
+	aligner.Export(lines)
 
 	return 0, nil
 }
