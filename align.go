@@ -183,14 +183,8 @@ func (a *Aligner) Export(lines []string) {
 		words := a.SplitWithQual(line, a.sep, a.txtq.Qualifier)
 
 		var columnNum int
+		var tempColumn int // used for call to pad() to incorporate column filtering
 		for _, word := range words {
-
-			// start 48
-
-			// TODO: list will be 1 based
-			// list will already be sorted
-			// a list item can be hight than the existing number of fields and therefore ignored
-			// column list will be integers
 			if a.filterLen > 0 {
 				if !contains(a.filter, columnNum+1) {
 					columnNum++
@@ -200,10 +194,10 @@ func (a *Aligner) Export(lines []string) {
 					continue
 				}
 			}
-			// end 48
 
-			word = pad(word, columnNum, a.columnCounts[columnNum], a.padOpts)
+			word = pad(word, tempColumn, a.columnCounts[columnNum], a.padOpts)
 			columnNum++
+			tempColumn++
 
 			// Do not add a delimiter to the last field
 			// This also properly aligns the output even if there are lines with a different number of fields
