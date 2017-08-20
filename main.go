@@ -130,25 +130,22 @@ func run() (int, error) {
 		sort.Ints(outColumns)
 	}
 
-	aligner := NewAligner(input, output, *sFlag, qu)
+	aligner := newAlign(input, output, *sFlag, qu)
 
 	switch *aFlag {
 	case "left":
-		aligner.UpdatePadding(PaddingOpts{Justification: JustifyLeft})
+		aligner.updatePadding(PaddingOpts{Justification: JustifyLeft})
 	case "right":
-		aligner.UpdatePadding(PaddingOpts{Justification: JustifyRight})
+		aligner.updatePadding(PaddingOpts{Justification: JustifyRight})
 	case "center":
-		aligner.UpdatePadding(PaddingOpts{Justification: JustifyCenter})
+		aligner.updatePadding(PaddingOpts{Justification: JustifyCenter})
 	default:
-		aligner.UpdatePadding(PaddingOpts{Justification: JustifyLeft})
+		aligner.updatePadding(PaddingOpts{Justification: JustifyLeft})
 	}
-
 	aligner.filterColumns(outColumns)
+	aligner.outputSep(*dFlag)
 
-	lines := aligner.ColumnCounts()
-
-	aligner.OutputSep(*dFlag)
-	aligner.Export(lines)
+	aligner.Align()
 
 	return 0, nil
 }
