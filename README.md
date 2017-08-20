@@ -24,7 +24,7 @@ Another use is to align blocks of code by `=` or `=>`, etc.
 
 ```sh
 $ go get github.com/Guitarbum722/align
-$ go install
+$ make install
 ```
 
 ### Usage - CLI examples
