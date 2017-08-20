@@ -266,7 +266,6 @@ func trailingPad(s string, padLen int) string {
 
 // splitWithQual basically works like the standard strings.Split() func, but will consider a text qualifier if set.
 func (a *Align) splitWithQual(s, sep, qual string) []string {
-
 	if !a.txtq.On {
 		return strings.Split(s, sep) // use standard Split() method if no qualifier is considered
 	}

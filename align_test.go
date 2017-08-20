@@ -197,7 +197,7 @@ Alisa,Walker,Armand,Sed@Nuncmauriselit.com,Himachal Pradesh,Shimla,MZ0 4QS,Olivi
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_ = a.columnLength()
+		a.columnLength()
 	}
 }
 
@@ -210,7 +210,7 @@ func BenchmarkSplitWithQual(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_ = a.splitWithQual(input, comma, "\"")
+		a.splitWithQual(input, comma, "\"")
 	}
 }
 
@@ -223,6 +223,6 @@ func BenchmarkSplitWithQualNoQual(b *testing.B) {
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		_ = a.splitWithQual(input, comma, "\"")
+		a.splitWithQual(input, comma, "\"")
 	}
 }
