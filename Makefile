@@ -1,9 +1,7 @@
-LDFLAGS = -ldflags "-X main.gitSHA=$(shell git rev-parse HEAD)"
-
 OS := $(shell uname)
 
 build: clean
-	go build $(LDFLAGS) -o align
+	go build
 
 test:
 	go test -v
