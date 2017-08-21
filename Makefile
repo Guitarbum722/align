@@ -1,7 +1,7 @@
 OS := $(shell uname)
 
 build: clean
-	go build
+	go build -o bin/align
 
 test:
 	go test -v
@@ -25,7 +25,7 @@ ifeq ($(OS),FreeBSD)
 	cp -f bin/align-freebsd /usr/local/bin/align
 endif
 uninstall: 
-	rm -f /usr/local/bin/align*
+	rm -f /usr/local/bin/align
 
 release:
 	./build.sh release
