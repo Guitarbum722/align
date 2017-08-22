@@ -66,6 +66,12 @@ Value1     | Value2
 CoolValue1 | CoolValue2 | CoolValue3
 ```
 
+Support for worldwide characters.
+```
+first          , last              , middle  , email
+paul           , danny             ,  かど    , や製油
+```
+
 It is perfectly acceptable to even use emojis as your input/output delimiters.
 ```
 first  😮 last     😮 email
