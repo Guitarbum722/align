@@ -4,7 +4,8 @@ import (
 	"bufio"
 	"io"
 	"strings"
-	"unicode/utf8"
+
+	"github.com/mattn/go-runewidth"
 )
 
 const singleSpace = " "
@@ -235,7 +236,7 @@ func pad(s string, columnNum, count int, p PaddingOpts) string {
 // determines the length of the padding needed
 func countPadding(s string, count int) int {
 	padLength := count - len(s)
-	rCount, wordLen := utf8.RuneCountInString(s), len(s)
+	rCount, wordLen := runewidth.StringWidth(s), len(s)
 	if rCount < wordLen {
 		padLength += wordLen - rCount
 	}
