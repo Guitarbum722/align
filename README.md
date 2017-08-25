@@ -4,6 +4,7 @@ _A general purpose application that aligns text_
 [![GoDoc](https://img.shields.io/badge/api-reference-blue.svg?style=flat-square)](https://godoc.org/github.com/Guitarbum722/align) 
 [![Build Status](https://travis-ci.org/Guitarbum722/align.svg?branch=master)](https://travis-ci.org/Guitarbum722/align)
 [![Go Report Card](https://goreportcard.com/badge/github.com/Guitarbum722/align)](https://goreportcard.com/report/github.com/Guitarbum722/align)
+[![Coverage Status](https://coveralls.io/repos/github/Guitarbum722/align/badge.svg?branch=master)](https://coveralls.io/github/Guitarbum722/align?branch=master)
 
 The focus of this application is to provide a fast, efficient, and useful tool for aligning text.
 Its creation is the result of inspiration from several other amazing alignment tools, namely [`column`](http://man7.org/linux/man-pages/man1/column.1.html) or the Sublime Text plugin [`AlignTab`](https://github.com/randy3k/AlignTab).
