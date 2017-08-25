@@ -1,20 +1,20 @@
 language: go
-
 go:
   - 1.7.x
   - 1.8.x
+  - 1.9.x
   - master
-
 os:
   - linux
   - osx
-  
+before_install:
+  - go get github.com/mattn/goveralls
 notifications:
   email:
     recipients:
       - johnkenneth.moore@gmail.com
     on_success: never
     on_failure: always 
-
 script:
-  - go test -v
+  - go test -v -covermode=count -coverprofile=coverage.out
+  - goveralls -coverprofile=coverage.out -service travis-ci -repotoken $COVERALLS_TOKEN
