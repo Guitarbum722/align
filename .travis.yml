@@ -8,7 +8,6 @@ os:
   - linux
   - osx
 before_install:
-  - go get github.com/axw/gocov/gocov
   - go get github.com/mattn/goveralls
 notifications:
   email:
