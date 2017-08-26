@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"io"
 	"os"
 	"strings"
 	"testing"
@@ -140,6 +142,132 @@ var countPaddingCases = []struct {
 		5,
 		2,
 	},
+}
+
+var paddingCases = []struct {
+	input       string
+	columnCount int
+	po          PaddingOpts
+	expected    int
+}{
+	{
+		"Go",
+		8,
+		PaddingOpts{Justification: JustifyLeft},
+		10,
+	},
+	{
+		"Go",
+		8,
+		PaddingOpts{Justification: JustifyCenter},
+		10,
+	},
+	{
+		"Go",
+		4,
+		PaddingOpts{Justification: JustifyCenter},
+		6,
+	},
+	{
+		"Go",
+		8,
+		PaddingOpts{Justification: JustifyRight},
+		10,
+	},
+}
+
+var qualifiedSplitCases = []struct {
+	input    string
+	sep      string
+	qual     string
+	expected int
+}{
+	{
+		"First,\"Middle, Nickname\",Last",
+		",",
+		"\"",
+		3,
+	},
+	{
+		"First||\"Middle|| Nickname\"||Last",
+		"||",
+		"\"",
+		3,
+	},
+	{
+		"First,'Middle Nickname',Last",
+		",",
+		"'",
+		3,
+	},
+	{
+		"First,Middle Nickname,Last",
+		",",
+		"",
+		3,
+	},
+	{
+		"First",
+		",",
+		"\"",
+		1,
+	},
+}
+
+var exportCases = []struct {
+	input          io.Reader
+	output         io.Writer
+	outColumns     []int
+	numOfDelimiter int
+}{
+	{
+		strings.NewReader("one,two,three\nfour,five,six"),
+		bytes.NewBufferString(""),
+		[]int{1},
+		1,
+	},
+	{
+		strings.NewReader("first,middle,last"),
+		bytes.NewBufferString(""),
+		[]int{1, 3},
+		0,
+	},
+	{
+		strings.NewReader("first,middle,last"),
+		bytes.NewBufferString(""),
+		nil,
+		0,
+	},
+}
+
+func TestColumnFilter(t *testing.T) {
+	for _, tt := range exportCases {
+		a := newAlign(tt.input, tt.output, comma, TextQualifier{})
+		a.filterColumns(tt.outColumns)
+
+		a.Align()
+	}
+}
+
+func TestSplit(t *testing.T) {
+	for _, tt := range qualifiedSplitCases {
+		a := newAlign(strings.NewReader(tt.input), os.Stdout, comma, TextQualifier{On: true, Qualifier: "\""})
+		got := a.splitWithQual(tt.input, tt.sep, tt.qual)
+
+		if len(got) != tt.expected {
+			t.Fatalf("splitWithQual(%v, %v, %v) = %v; want %v", tt.input, tt.sep, tt.qual, len(got), tt.expected)
+		}
+	}
+}
+
+func TestPad(t *testing.T) {
+	for _, tt := range paddingCases {
+		got := pad(tt.input, 1, tt.columnCount, tt.po)
+
+		if len(got) != tt.expected {
+			t.Fatalf("pad(%v) =%v; want %v", tt.input, got, tt.expected)
+		}
+	}
 }
 
 func TestColumnCounts(t *testing.T) {
