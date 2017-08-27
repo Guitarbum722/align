@@ -220,8 +220,6 @@ func pad(s string, columnNum, count int, p PaddingOpts) string {
 		} else {
 			s = trailingPad(s, padLength)
 		}
-	default:
-		s = trailingPad(s, padLength)
 	}
 
 	// at least one space to pad every field after the delimiter for readability

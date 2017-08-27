@@ -240,6 +240,152 @@ var exportCases = []struct {
 	},
 }
 
+var runCases = []struct {
+	hValue    bool
+	helpValue bool
+	fValue    string
+	oValue    string
+	qValue    string
+	sValue    string
+	dValue    string
+	aValue    string
+	cValue    string
+	shouldErr bool
+}{
+	{
+		hValue:    true,
+		shouldErr: true,
+	},
+	{
+		helpValue: true,
+		shouldErr: true,
+	},
+	{
+		cValue:    "1,2",
+		shouldErr: true,
+	},
+	{
+		cValue:    "1,2,a",
+		shouldErr: true,
+	},
+	{
+		qValue:    "\"",
+		shouldErr: true,
+	},
+	{
+		oValue:    "out.csv",
+		shouldErr: true,
+	},
+}
+
+var ouputSepCases = []struct {
+	input    string
+	expected string
+}{
+	{
+		",",
+		",",
+	},
+	{
+		"||",
+		"||",
+	},
+}
+
+var columnSizeCases = []struct {
+	counts   map[int]int
+	cNum     int
+	expected int
+}{
+	{
+		map[int]int{
+			0: 2,
+			1: 2,
+			2: 5,
+		},
+		0,
+		2,
+	},
+	{
+		map[int]int{
+			0: 2,
+			1: 2,
+			2: 5,
+		},
+		3,
+		-1,
+	},
+}
+
+var updatePaddingCases = []struct {
+	input    justification
+	expected justification
+}{
+	{
+		JustifyCenter,
+		JustifyCenter,
+	},
+	{
+		JustifyRight,
+		JustifyRight,
+	},
+}
+
+func TestRun(t *testing.T) {
+	// flag.Usage()
+
+	for _, tt := range runCases {
+		*dFlag = tt.dValue
+		*sFlag = tt.sValue
+		*hFlag = tt.hValue
+		*helpFlag = tt.helpValue
+		*fFlag = tt.fValue
+		*oFlag = tt.oValue
+		*aFlag = tt.aValue
+		*cFlag = tt.cValue
+		*qFlag = tt.qValue
+
+		code, _ := run()
+
+		if tt.shouldErr != (code == 1) {
+			t.Fatalf("run() = %v; want %v", code, tt.shouldErr)
+		}
+	}
+}
+
+func TestUpdatePadding(t *testing.T) {
+	for _, tt := range updatePaddingCases {
+		a := &Align{}
+		a.updatePadding(PaddingOpts{Justification: tt.input})
+
+		if a.padOpts.Justification != tt.expected {
+			t.Fatalf("updatePadding(%v) = %v; want %v", tt.input, a.padOpts.Justification, tt.expected)
+		}
+	}
+}
+
+func TestColumnSize(t *testing.T) {
+	for _, tt := range columnSizeCases {
+		a := &Align{columnCounts: tt.counts}
+
+		got := a.columnSize(tt.cNum)
+		if got != tt.expected {
+			t.Fatalf("columnSize(%v) = %v; want %v", tt.cNum, got, tt.expected)
+		}
+	}
+}
+
+func TestOutputSep(t *testing.T) {
+	for _, tt := range ouputSepCases {
+		a := &Align{}
+		a.outputSep(tt.input)
+
+		if a.sepOut != tt.expected {
+			t.Fatalf("outputSep(%v) = %v; want %v", tt.input, a.sepOut, tt.expected)
+		}
+	}
+}
+
 func TestColumnFilter(t *testing.T) {
 	for _, tt := range exportCases {
 		a := newAlign(tt.input, tt.output, comma, TextQualifier{})
