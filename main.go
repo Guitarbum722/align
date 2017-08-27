@@ -30,24 +30,34 @@ func main() {
 	}
 }
 
-func run() (int, error) {
+var hFlag *bool
+var helpFlag *bool
+var fFlag *string
+var oFlag *string
+var qFlag *string
+var sFlag *string
+var dFlag *string
+var aFlag *string
+var cFlag *string
 
+func init() {
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, usage)
 	}
 
-	hFlag := flag.Bool("h", false, usage)
-	helpFlag := flag.Bool("help", false, usage)
-	fFlag := flag.String("f", "", "")
-	oFlag := flag.String("o", "", "")
-	qFlag := flag.String("q", "", "")
-	sFlag := flag.String("s", ",", "")
-	dFlag := flag.String("d", "", "")
-	aFlag := flag.String("a", "left", "")
-	cFlag := flag.String("c", "", "")
+	hFlag = flag.Bool("h", false, usage)
+	helpFlag = flag.Bool("help", false, usage)
+	fFlag = flag.String("f", "", "")
+	oFlag = flag.String("o", "", "")
+	qFlag = flag.String("q", "", "")
+	sFlag = flag.String("s", ",", "")
+	dFlag = flag.String("d", "", "")
+	aFlag = flag.String("a", "left", "")
+	cFlag = flag.String("c", "", "")
+}
 
+func run() (int, error) {
 	flag.Parse()
-
 	if *dFlag == "" {
 		*dFlag = *sFlag
 	}
@@ -68,6 +78,42 @@ func run() (int, error) {
 	var input io.Reader
 	var output io.Writer
 	var qu TextQualifier
+	var outColumns []int
+
+	if *cFlag != "" {
+		c := strings.Split(*cFlag, ",")
+		outColumns = make([]int, 0, len(c))
+
+		// validate specified field numbers and sort them
+		for _, v := range c {
+			num, err := strconv.Atoi(v)
+			if err != nil {
+				return 1, errors.New("make sure entry for -c are numbers (ie 1,2,5,7)")
+			}
+			if num > 0 {
+				outColumns = append(outColumns, num)
+			}
+		}
+		sort.Ints(outColumns)
+	}
+
+	if *qFlag != "" {
+		qu = TextQualifier{
+			On:        true,
+			Qualifier: *qFlag,
+		}
+	}
+
+	if *oFlag != "" {
+		f, err := os.Create(*oFlag)
+		if err != nil {
+			return 1, err
+		}
+		defer f.Close()
+		output = f
+	} else {
+		output = os.Stdout
+	}
 
 	if isPiped {
 		if *fFlag != "" {
@@ -91,43 +137,6 @@ func run() (int, error) {
 		} else {
 			return 1, errors.New("no input provided \n" + usage)
 		}
-	}
-
-	if *oFlag != "" {
-		f, err := os.Create(*oFlag)
-		if err != nil {
-			return 1, err
-		}
-		defer f.Close()
-		output = f
-	} else {
-		output = os.Stdout
-	}
-
-	if *qFlag != "" {
-		qu = TextQualifier{
-			On:        true,
-			Qualifier: *qFlag,
-		}
-	}
-
-	var outColumns []int
-
-	if *cFlag != "" {
-		c := strings.Split(*cFlag, ",")
-		outColumns = make([]int, 0, len(c))
-
-		// validate specified field numbers and sort them
-		for _, v := range c {
-			num, err := strconv.Atoi(v)
-			if err != nil {
-				return 1, errors.New("make sure entry for -c are numbers (ie 1,2,5,7)")
-			}
-			if num > 0 {
-				outColumns = append(outColumns, num)
-			}
-		}
-		sort.Ints(outColumns)
 	}
 
 	aligner := newAlign(input, output, *sFlag, qu)
