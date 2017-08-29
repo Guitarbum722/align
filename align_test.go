@@ -235,6 +235,12 @@ var exportCases = []struct {
 	{
 		strings.NewReader("first,middle,last"),
 		bytes.NewBufferString(""),
+		[]int{1, 4},
+		0,
+	},
+	{
+		strings.NewReader("first,middle,last"),
+		bytes.NewBufferString(""),
 		nil,
 		0,
 	},
