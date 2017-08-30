@@ -256,6 +256,7 @@ var runCases = []struct {
 	dValue    string
 	aValue    string
 	cValue    string
+	vValue    string
 	shouldErr bool
 }{
 	{
@@ -267,7 +268,27 @@ var runCases = []struct {
 		shouldErr: true,
 	},
 	{
+		vValue:    "1-right,2-center",
+		shouldErr: true,
+	},
+	{
+		vValue:    "1-left,2-,NaN-left",
+		shouldErr: true,
+	},
+	{
+		vValue:    "3-noexist",
+		shouldErr: true,
+	},
+	{
+		cValue:    "a2-right,NaN",
+		shouldErr: true,
+	},
+	{
 		cValue:    "1,2",
+		shouldErr: true,
+	},
+	{
+		cValue:    "1-left,2-right,3-center",
 		shouldErr: true,
 	},
 	{
@@ -350,6 +371,7 @@ func TestRun(t *testing.T) {
 		*aFlag = tt.aValue
 		*cFlag = tt.cValue
 		*qFlag = tt.qValue
+		*vFlag = tt.vValue
 
 		code, _ := run()
 
@@ -414,7 +436,7 @@ func TestSplit(t *testing.T) {
 
 func TestPad(t *testing.T) {
 	for _, tt := range paddingCases {
-		got := pad(tt.input, 1, tt.columnCount, tt.po)
+		got := pad(tt.input, 1, tt.columnCount, tt.po.Justification)
 
 		if len(got) != tt.expected {
 			t.Fatalf("pad(%v) =%v; want %v", tt.input, got, tt.expected)

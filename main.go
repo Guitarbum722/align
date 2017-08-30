@@ -21,6 +21,7 @@ Options:
   -d           output delimiter (defaults to the value of sep)
   -a           <left>, <right>, <center> justification (default: left)
   -c           output specific fields (default: all fields)
+  -v           override justification by column number (e.g. 2-center,5-right)
   `
 
 func main() {
@@ -39,6 +40,7 @@ var sFlag *string
 var dFlag *string
 var aFlag *string
 var cFlag *string
+var vFlag *string
 
 func init() {
 	flag.Usage = func() {
@@ -54,6 +56,7 @@ func init() {
 	dFlag = flag.String("d", "", "")
 	aFlag = flag.String("a", "left", "")
 	cFlag = flag.String("c", "", "")
+	vFlag = flag.String("v", "", "")
 }
 
 func run() (int, error) {
@@ -79,6 +82,36 @@ func run() (int, error) {
 	var output io.Writer
 	var qu TextQualifier
 	var outColumns []int
+	var justifyOverrides = make(map[int]justification)
+
+	if *vFlag != "" {
+		c := strings.Split(*vFlag, ",")
+
+		for _, v := range c {
+			if strings.HasSuffix(v, "-right") || strings.HasSuffix(v, "-center") || strings.HasSuffix(v, "-left") {
+				overrides := strings.Split(v, "-")
+				v = overrides[0]
+
+				num, err := strconv.Atoi(v)
+				if err != nil {
+					return 1, errors.New("make sure entry for -v are numbers with a justification separated by '-' (ie 1-right,3-center)")
+				}
+
+				switch overrides[1] {
+				case "left":
+					justifyOverrides[num] = JustifyLeft
+				case "center":
+					justifyOverrides[num] = JustifyCenter
+				case "right":
+					justifyOverrides[num] = JustifyRight
+				}
+			}
+		}
+
+		if len(justifyOverrides) < 1 {
+			return 1, errors.New("make sure entry for -v are numbers with a justification separated by '-' (ie 1-right,3-center)")
+		}
+	}
 
 	if *cFlag != "" {
 		c := strings.Split(*cFlag, ",")
@@ -143,13 +176,13 @@ func run() (int, error) {
 
 	switch *aFlag {
 	case "left":
-		aligner.updatePadding(PaddingOpts{Justification: JustifyLeft})
+		aligner.updatePadding(PaddingOpts{Justification: JustifyLeft, columnOverride: justifyOverrides})
 	case "right":
-		aligner.updatePadding(PaddingOpts{Justification: JustifyRight})
+		aligner.updatePadding(PaddingOpts{Justification: JustifyRight, columnOverride: justifyOverrides})
 	case "center":
-		aligner.updatePadding(PaddingOpts{Justification: JustifyCenter})
+		aligner.updatePadding(PaddingOpts{Justification: JustifyCenter, columnOverride: justifyOverrides})
 	default:
-		aligner.updatePadding(PaddingOpts{Justification: JustifyLeft})
+		aligner.updatePadding(PaddingOpts{Justification: JustifyLeft, columnOverride: justifyOverrides})
 	}
 	aligner.filterColumns(outColumns)
 	aligner.outputSep(*dFlag)
