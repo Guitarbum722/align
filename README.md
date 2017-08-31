@@ -76,10 +76,10 @@ Column filtering (specifiy output fields and optionally override the justificati
 $ cat file.csv | align -a right -c 1,3,5
 
 # output fields 1,2,3,7,8 with default justification (left) except for field 7, which is right justified
-$ cat file.csv | align -c 1,2,3,7,8 -v 1-right,7-center
+$ cat file.csv | align -c 1,2,3,7,8 -i 1:right,7:center
 
 #output all fields by default, with right justification, with overridden justification on certain columns
-$ cat file.csv | align -a right -v 1-center,5-left
+$ cat file.csv | align -a right -i 1:center,5:left
 ```
 
 Support for worldwide characters.
