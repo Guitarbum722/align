@@ -45,7 +45,7 @@ Options:
   -d           output delimiter (defaults to the value of sep)
   -a           <left>, <right>, <center> justification (default: left)
   -c           output specific fields (default: all fields)
-  -v           override justification by column number (e.g. 2-center,5-right)
+  -i           override justification by column number (e.g. 2:center,5:right)
 ```
 
 _Specify your input file, output file, delimiter._

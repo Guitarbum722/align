@@ -21,7 +21,7 @@ Options:
   -d           output delimiter (defaults to the value of sep)
   -a           <left>, <right>, <center> justification (default: left)
   -c           output specific fields (default: all fields)
-  -v           override justification by column number (e.g. 2-center,5-right)
+  -i           override justification by column number (e.g. 2:center,5:right)
   `
 
 func main() {
@@ -40,7 +40,7 @@ var sFlag *string
 var dFlag *string
 var aFlag *string
 var cFlag *string
-var vFlag *string
+var iFlag *string
 
 func init() {
 	flag.Usage = func() {
@@ -56,7 +56,7 @@ func init() {
 	dFlag = flag.String("d", "", "")
 	aFlag = flag.String("a", "left", "")
 	cFlag = flag.String("c", "", "")
-	vFlag = flag.String("v", "", "")
+	iFlag = flag.String("i", "", "")
 }
 
 func run() (int, error) {
@@ -84,17 +84,17 @@ func run() (int, error) {
 	var outColumns []int
 	var justifyOverrides = make(map[int]justification)
 
-	if *vFlag != "" {
-		c := strings.Split(*vFlag, ",")
+	if *iFlag != "" {
+		c := strings.Split(*iFlag, ",")
 
 		for _, v := range c {
-			if strings.HasSuffix(v, "-right") || strings.HasSuffix(v, "-center") || strings.HasSuffix(v, "-left") {
-				overrides := strings.Split(v, "-")
+			if strings.HasSuffix(v, ":right") || strings.HasSuffix(v, ":center") || strings.HasSuffix(v, ":left") {
+				overrides := strings.Split(v, ":")
 				v = overrides[0]
 
 				num, err := strconv.Atoi(v)
 				if err != nil {
-					return 1, errors.New("make sure entry for -v are numbers with a justification separated by '-' (ie 1-right,3-center)")
+					return 1, errors.New("make sure entry for -v are numbers with a justification separated by ':' (ie 1-right,3-center)")
 				}
 
 				switch overrides[1] {
@@ -109,7 +109,7 @@ func run() (int, error) {
 		}
 
 		if len(justifyOverrides) < 1 {
-			return 1, errors.New("make sure entry for -v are numbers with a justification separated by '-' (ie 1-right,3-center)")
+			return 1, errors.New("make sure entry for -v are numbers with a justification separated by ':' (ie 1:right,3:center)")
 		}
 	}
 
