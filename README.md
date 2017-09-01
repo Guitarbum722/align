@@ -35,7 +35,7 @@ $ make release
 ### Usage - CLI examples
 
 ```
-Usage: align [-h] [-f] [-o] [-q] [-s] [-d] [-a]
+Usage: align [-h] [-f] [-o] [-q] [-s] [-d] [-a] [-c] [-i]
 Options:
   -h | --help  help
   -f           input file.  If not specified, pipe input to stdin
