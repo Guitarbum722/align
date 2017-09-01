@@ -32,7 +32,8 @@ type TextQualifier struct {
 
 // PaddingOpts provides configurability for left/center/right justification and padding length
 type PaddingOpts struct {
-	Justification justification
+	Justification  justification
+	columnOverride map[int]justification //override the justification of specified columns
 }
 
 // Align scans input and writes output with aligned text
@@ -185,7 +186,18 @@ func (a *Align) export(lines []string) {
 				}
 			}
 
-			word = pad(word, tempColumn, a.columnCounts[columnNum], a.padOpts)
+			j := a.padOpts.Justification
+
+			// override justification for the specified columnNum in the key for the PaddingOpts.columnOverride map
+			if len(a.padOpts.columnOverride) > 0 {
+				for k, v := range a.padOpts.columnOverride {
+					if k == columnNum+1 {
+						j = v
+					}
+				}
+			}
+
+			word = pad(word, tempColumn, a.columnCounts[columnNum], j)
 			columnNum++
 			tempColumn++
 
@@ -205,10 +217,10 @@ func (a *Align) export(lines []string) {
 }
 
 // pad s based on the supplied PaddingOpts
-func pad(s string, columnNum, count int, p PaddingOpts) string {
+func pad(s string, columnNum, count int, j justification) string {
 	padLength := countPadding(s, count)
 
-	switch p.Justification {
+	switch j {
 	case JustifyLeft:
 		s = trailingPad(s, padLength)
 	case JustifyRight:

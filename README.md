@@ -35,7 +35,7 @@ $ make release
 ### Usage - CLI examples
 
 ```
-Usage: align [-h] [-f] [-o] [-q] [-s] [-d] [-a]
+Usage: align [-h] [-f] [-o] [-q] [-s] [-d] [-a] [-c] [-i]
 Options:
   -h | --help  help
   -f           input file.  If not specified, pipe input to stdin
@@ -45,6 +45,7 @@ Options:
   -d           output delimiter (defaults to the value of sep)
   -a           <left>, <right>, <center> justification (default: left)
   -c           output specific fields (default: all fields)
+  -i           override justification by column number (e.g. 2:center,5:right)
 ```
 
 _Specify your input file, output file, delimiter._
@@ -66,6 +67,19 @@ $ echo "field1|field2\nValue1|Value2\nCoolValue1|CoolValue2|CoolValue3" | align 
 field1     | field2
 Value1     | Value2
 CoolValue1 | CoolValue2 | CoolValue3
+```
+
+Column filtering (specifiy output fields and optionally override the justification of the output fields).  This might be useful if you would like to display a dollar amount or number field differently.  The specified fields are indexed at 1.
+
+```sh
+# output fields 1,3,5 justified 'right'
+$ cat file.csv | align -a right -c 1,3,5
+
+# output fields 1,2,3,7,8 with default justification (left) except for field 7, which is right justified
+$ cat file.csv | align -c 1,2,3,7,8 -i 1:right,7:center
+
+#output all fields by default, with right justification, with overridden justification on certain columns
+$ cat file.csv | align -a right -i 1:center,5:left
 ```
 
 Support for worldwide characters.
