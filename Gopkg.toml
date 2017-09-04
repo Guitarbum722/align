@@ -24,7 +24,3 @@
 [[constraint]]
   name = "github.com/mattn/go-runewidth"
   version = "0.0.2"
-
-[[constraint]]
-  name = "github.com/Guitarbum722/align"
-  version = "master"
