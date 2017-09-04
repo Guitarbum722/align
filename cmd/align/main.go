@@ -9,6 +9,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/Guitarbum722/align"
 )
 
 const usage = `Usage: align [-h] [-f] [-o] [-q] [-s] [-d] [-a] [-c] [-i]
@@ -24,23 +26,25 @@ Options:
   -i           override justification by column number (e.g. 2:center,5:right)
   `
 
+var (
+	hFlag    *bool
+	helpFlag *bool
+	fFlag    *string
+	oFlag    *string
+	qFlag    *string
+	sFlag    *string
+	dFlag    *string
+	aFlag    *string
+	cFlag    *string
+	iFlag    *string
+)
+
 func main() {
 	if retval, err := run(); err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
 		os.Exit(retval)
 	}
 }
-
-var hFlag *bool
-var helpFlag *bool
-var fFlag *string
-var oFlag *string
-var qFlag *string
-var sFlag *string
-var dFlag *string
-var aFlag *string
-var cFlag *string
-var iFlag *string
 
 func init() {
 	flag.Usage = func() {
@@ -80,9 +84,9 @@ func run() (int, error) {
 
 	var input io.Reader
 	var output io.Writer
-	var qu TextQualifier
+	var qu align.TextQualifier
 	var outColumns []int
-	var justifyOverrides = make(map[int]justification)
+	var justifyOverrides = make(map[int]align.Justification)
 
 	if *iFlag != "" {
 		c := strings.Split(*iFlag, ",")
@@ -99,11 +103,11 @@ func run() (int, error) {
 
 				switch overrides[1] {
 				case "left":
-					justifyOverrides[num] = JustifyLeft
+					justifyOverrides[num] = align.JustifyLeft
 				case "center":
-					justifyOverrides[num] = JustifyCenter
+					justifyOverrides[num] = align.JustifyCenter
 				case "right":
-					justifyOverrides[num] = JustifyRight
+					justifyOverrides[num] = align.JustifyRight
 				}
 			}
 		}
@@ -131,7 +135,7 @@ func run() (int, error) {
 	}
 
 	if *qFlag != "" {
-		qu = TextQualifier{
+		qu = align.TextQualifier{
 			On:        true,
 			Qualifier: *qFlag,
 		}
@@ -172,20 +176,20 @@ func run() (int, error) {
 		}
 	}
 
-	aligner := newAlign(input, output, *sFlag, qu)
+	aligner := align.NewAlign(input, output, *sFlag, qu)
 
 	switch *aFlag {
 	case "left":
-		aligner.updatePadding(PaddingOpts{Justification: JustifyLeft, columnOverride: justifyOverrides})
+		aligner.UpdatePadding(align.PaddingOpts{Justification: align.JustifyLeft, ColumnOverride: justifyOverrides})
 	case "right":
-		aligner.updatePadding(PaddingOpts{Justification: JustifyRight, columnOverride: justifyOverrides})
+		aligner.UpdatePadding(align.PaddingOpts{Justification: align.JustifyRight, ColumnOverride: justifyOverrides})
 	case "center":
-		aligner.updatePadding(PaddingOpts{Justification: JustifyCenter, columnOverride: justifyOverrides})
+		aligner.UpdatePadding(align.PaddingOpts{Justification: align.JustifyCenter, ColumnOverride: justifyOverrides})
 	default:
-		aligner.updatePadding(PaddingOpts{Justification: JustifyLeft, columnOverride: justifyOverrides})
+		aligner.UpdatePadding(align.PaddingOpts{Justification: align.JustifyLeft, ColumnOverride: justifyOverrides})
 	}
-	aligner.filterColumns(outColumns)
-	aligner.outputSep(*dFlag)
+	aligner.FilterColumns(outColumns)
+	aligner.OutputSep(*dFlag)
 
 	aligner.Align()
 

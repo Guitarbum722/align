@@ -1,6 +1,7 @@
 OS := $(shell uname)
 
 build: clean
+	cd cmd/align
 	go build -o bin/align
 
 test:

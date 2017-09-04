@@ -1,4 +1,4 @@
-package main
+package align
 
 import (
 	"bytes"
@@ -345,8 +345,8 @@ var columnSizeCases = []struct {
 }
 
 var updatePaddingCases = []struct {
-	input    justification
-	expected justification
+	input    Justification
+	expected Justification
 }{
 	{
 		JustifyCenter,
@@ -358,33 +358,11 @@ var updatePaddingCases = []struct {
 	},
 }
 
-func TestRun(t *testing.T) {
-	// flag.Usage()
-
-	for _, tt := range runCases {
-		*dFlag = tt.dValue
-		*sFlag = tt.sValue
-		*hFlag = tt.hValue
-		*helpFlag = tt.helpValue
-		*fFlag = tt.fValue
-		*oFlag = tt.oValue
-		*aFlag = tt.aValue
-		*cFlag = tt.cValue
-		*qFlag = tt.qValue
-		*iFlag = tt.iValue
-
-		code, _ := run()
-
-		if tt.shouldErr != (code == 1) {
-			t.Fatalf("run() = %v; want %v", code, tt.shouldErr)
-		}
-	}
-}
-
+// TestUpdatePadding
 func TestUpdatePadding(t *testing.T) {
 	for _, tt := range updatePaddingCases {
 		a := &Align{}
-		a.updatePadding(PaddingOpts{Justification: tt.input})
+		a.UpdatePadding(PaddingOpts{Justification: tt.input})
 
 		if a.padOpts.Justification != tt.expected {
 			t.Fatalf("updatePadding(%v) = %v; want %v", tt.input, a.padOpts.Justification, tt.expected)
@@ -392,6 +370,7 @@ func TestUpdatePadding(t *testing.T) {
 	}
 }
 
+// TestColumnSize
 func TestColumnSize(t *testing.T) {
 	for _, tt := range columnSizeCases {
 		a := &Align{columnCounts: tt.counts}
@@ -403,10 +382,11 @@ func TestColumnSize(t *testing.T) {
 	}
 }
 
+// TestOutputSep
 func TestOutputSep(t *testing.T) {
 	for _, tt := range ouputSepCases {
 		a := &Align{}
-		a.outputSep(tt.input)
+		a.OutputSep(tt.input)
 
 		if a.sepOut != tt.expected {
 			t.Fatalf("outputSep(%v) = %v; want %v", tt.input, a.sepOut, tt.expected)
@@ -414,18 +394,20 @@ func TestOutputSep(t *testing.T) {
 	}
 }
 
+// TestColumnFilter
 func TestColumnFilter(t *testing.T) {
 	for _, tt := range exportCases {
-		a := newAlign(tt.input, tt.output, comma, TextQualifier{})
-		a.filterColumns(tt.outColumns)
+		a := NewAlign(tt.input, tt.output, comma, TextQualifier{})
+		a.FilterColumns(tt.outColumns)
 
 		a.Align()
 	}
 }
 
+// TestSplit
 func TestSplit(t *testing.T) {
 	for _, tt := range qualifiedSplitCases {
-		a := newAlign(strings.NewReader(tt.input), os.Stdout, comma, TextQualifier{On: true, Qualifier: "\""})
+		a := NewAlign(strings.NewReader(tt.input), os.Stdout, comma, TextQualifier{On: true, Qualifier: "\""})
 		got := a.splitWithQual(tt.input, tt.sep, tt.qual)
 
 		if len(got) != tt.expected {
@@ -434,6 +416,7 @@ func TestSplit(t *testing.T) {
 	}
 }
 
+// TestPad
 func TestPad(t *testing.T) {
 	for _, tt := range paddingCases {
 		got := pad(tt.input, 1, tt.columnCount, tt.po.Justification)
@@ -444,9 +427,10 @@ func TestPad(t *testing.T) {
 	}
 }
 
+// TestColumnCounts
 func TestColumnCounts(t *testing.T) {
 	for _, tt := range columnCountCases {
-		a := newAlign(strings.NewReader(tt.input), os.Stdout, tt.sep, TextQualifier{On: tt.isQual, Qualifier: tt.qual})
+		a := NewAlign(strings.NewReader(tt.input), os.Stdout, tt.sep, TextQualifier{On: tt.isQual, Qualifier: tt.qual})
 		a.columnLength()
 		for i := range tt.counts {
 			if a.columnSize(i) != tt.counts[i] {
@@ -456,6 +440,7 @@ func TestColumnCounts(t *testing.T) {
 	}
 }
 
+// TestFieldLenEscaped
 func TestFieldLenEscaped(t *testing.T) {
 	for _, tt := range fieldLenEscapedCases {
 		got := fieldLenEscaped(tt.input, tt.sep, tt.qual)
@@ -465,6 +450,7 @@ func TestFieldLenEscaped(t *testing.T) {
 	}
 }
 
+// TestFieldLen
 func TestFieldLen(t *testing.T) {
 	for _, tt := range fieldLenCases {
 		got := fieldLen(tt.input, tt.sep)
@@ -474,6 +460,7 @@ func TestFieldLen(t *testing.T) {
 	}
 }
 
+// TestCountPadding
 func TestCountPadding(t *testing.T) {
 	for _, tt := range countPaddingCases {
 		got := countPadding(tt.input, tt.fieldLen)
@@ -483,6 +470,26 @@ func TestCountPadding(t *testing.T) {
 	}
 }
 
+// TestGenFieldLen
+func TestGenFieldLen(t *testing.T) {
+	s := "as,df,q,wer,1234,zxc,v"
+	comma := ","
+	got := genFieldLen(s, comma, comma)
+	expected := 2
+	if got != expected {
+		t.Fatalf("genFieldLen(%s, ", ", ", ") = %v; want %v", s, got, expected)
+	}
+}
+
+func TestGenFieldLen_Failure(t *testing.T) {
+	got := genFieldLen("", "", "")
+	expected := 0
+	if got != expected {
+		t.Fatalf(`genFieldLen("", "", "") = %v; want %v`, got, expected)
+	}
+}
+
+// BenchmarkColumnCounts
 func BenchmarkColumnCounts(b *testing.B) {
 	input := `First,Middle,Last,Email,Region,City,Zip,Full_Name,First,Middle,Last,Email,Region,City,Zip,Full_Name,First,Middle,Last,Email,Region,City,Zip,Full_Name
 Karleigh,Destiny,Dean,nunc.In@lorem.edu,Stockholms län,Märsta,9038,Shaine Reilly,Karleigh,Destiny,Dean,nunc.In@lorem.edu,Stockholms län,Märsta,9038,Shaine Reilly,Karleigh,Destiny,Dean,nunc.In@lorem.edu,Stockholms län,Märsta,9038,Shaine Reilly        
@@ -493,7 +500,7 @@ Karleigh,Destiny,Dean,nunc.In@lorem.edu,Stockholms län,Märsta,9038,Shaine Reil
 Alisa,Walker,Armand,Sed@Nuncmauriselit.com,Himachal Pradesh,Shimla,MZ0 4QS,Olivia Velez ,Alisa,Walker,Armand,Sed@Nuncmauriselit.com,Himachal Pradesh,Shimla,MZ0 4QS,Olivia Velez ,Alisa,Walker,Armand,Sed@Nuncmauriselit.com,Himachal Pradesh,Shimla,MZ0 4QS,Olivia Velez
 `
 
-	a := newAlign(strings.NewReader(input), os.Stdout, comma, TextQualifier{On: false})
+	a := NewAlign(strings.NewReader(input), os.Stdout, comma, TextQualifier{On: false})
 
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -503,10 +510,11 @@ Alisa,Walker,Armand,Sed@Nuncmauriselit.com,Himachal Pradesh,Shimla,MZ0 4QS,Olivi
 	}
 }
 
+// BenchmarkSplitWithQual
 func BenchmarkSplitWithQual(b *testing.B) {
 	input := "First,\"Middle, name\",Last,Email,Region,City,Zip,Full_Name"
 
-	a := newAlign(strings.NewReader(input), os.Stdout, comma, TextQualifier{On: true, Qualifier: "\""})
+	a := NewAlign(strings.NewReader(input), os.Stdout, comma, TextQualifier{On: true, Qualifier: "\""})
 
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -516,10 +524,11 @@ func BenchmarkSplitWithQual(b *testing.B) {
 	}
 }
 
+// BenchmarkSplitWithQualNoQual
 func BenchmarkSplitWithQualNoQual(b *testing.B) {
 	input := "First,Middle,Last,Email,Region,City,Zip,Full_Name"
 
-	a := newAlign(strings.NewReader(input), os.Stdout, comma, TextQualifier{On: false})
+	a := NewAlign(strings.NewReader(input), os.Stdout, comma, TextQualifier{On: false})
 
 	b.ReportAllocs()
 	b.ResetTimer()
