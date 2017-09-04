@@ -1,11 +1,13 @@
 #!/bin/sh
 
 ARCHS="darwin linux freebsd windows"
+CMD_DIR="cmd/align"
+BUILD_CMD="go build -v -o"
 
 if [ $1 == "release" ]; then
     echo "Generating align release binaries..."
     for arch in ${ARCHS}; do
-        GOOS=${arch} GOARCH=amd64 go build -v -o bin/align-${arch}
+        GOOS=${arch} GOARCH=amd64 ${BUILD_CMD} bin/align-${arch}
     done
 fi
 
@@ -19,19 +21,23 @@ case "$1" in
         ;;
     "freebsd") 
         echo "Building binary for FreeBSD..."
-        GOOS=freebsd GOARCH=amd64 go build -v -o bin/align-freebsd
+        cd ${CMD_DIR}
+        GOOS=freebsd GOARCH=amd64 ${BUILD_CMD} bin/align-freebsd
         ;;
     "darwin") 
         echo "Building binary for Darwin..."
-        GOOS=darwin GOARCH=amd64 go build -v -o bin/align-darwin
+        cd ${CMD_DIR}
+        GOOS=darwin GOARCH=amd64 ${BUILD_CMD} bin/align-darwin
         ;;
     "linux") 
         echo "Building binary for Linux..."
-        GOOS=linux GOARCH=amd64 go build -v -o bin/align-linux
+        cd ${CMD_DIR}
+        GOOS=linux GOARCH=amd64 ${BUILD_CMD} bin/align-linux
         ;;
     "windows") 
         echo "Building binary for Windows..."
-        GOOS=windows GOARCH=amd64 go build -v -o bin/align-windows.exe
+        cd ${CMD_DIR}
+        GOOS=windows GOARCH=amd64 ${BUILD_CMD} bin/align-windows.exe
         ;;
 esac
 
