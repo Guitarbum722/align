@@ -10,11 +10,11 @@ import (
 
 const singleSpace = " "
 
-type justification byte
+type Justification byte
 
-// Left, Right or Center justification options
+// Left, Right or Center Justification options
 const (
-	JustifyRight justification = iota
+	JustifyRight Justification = iota
 	JustifyCenter
 	JustifyLeft
 )
@@ -30,10 +30,10 @@ type TextQualifier struct {
 	Qualifier string
 }
 
-// PaddingOpts provides configurability for left/center/right justification and padding length
+// PaddingOpts provides configurability for left/center/right Justification and padding length
 type PaddingOpts struct {
-	Justification  justification
-	columnOverride map[int]justification //override the justification of specified columns
+	Justification  Justification
+	columnOverride map[int]Justification //override the Justification of specified columns
 }
 
 // Align scans input and writes output with aligned text
@@ -53,7 +53,7 @@ type Align struct {
 // and sets del to the desired delimiter to be used for alignment.
 // It is meant to read the contents of its io.Reader to determine the length of each field
 // and output the results in an aligned format.
-// Left justification is used by default.  See UpdatePadding to set the justification.
+// Left Justification is used by default.  See UpdatePadding to set the Justification.
 func newAlign(in io.Reader, out io.Writer, sep string, qu TextQualifier) *Align {
 	return &Align{
 		S:            bufio.NewScanner(in),
@@ -188,7 +188,7 @@ func (a *Align) export(lines []string) {
 
 			j := a.padOpts.Justification
 
-			// override justification for the specified columnNum in the key for the PaddingOpts.columnOverride map
+			// override Justification for the specified columnNum in the key for the PaddingOpts.columnOverride map
 			if len(a.padOpts.columnOverride) > 0 {
 				for k, v := range a.padOpts.columnOverride {
 					if k == columnNum+1 {
@@ -217,7 +217,7 @@ func (a *Align) export(lines []string) {
 }
 
 // pad s based on the supplied PaddingOpts
-func pad(s string, columnNum, count int, j justification) string {
+func pad(s string, columnNum, count int, j Justification) string {
 	padLength := countPadding(s, count)
 
 	switch j {
