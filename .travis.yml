@@ -6,6 +6,7 @@ go:
   - master
 os:
   - linux
+  - freebsd
   - osx
 before_install:
   - go get github.com/mattn/goveralls
