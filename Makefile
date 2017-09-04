@@ -1,7 +1,8 @@
 OS := $(shell uname)
 
 build: clean
-	go build cmd/align -o bin/align
+	cd cmd/align
+	go build -o bin/align
 
 test:
 	go test -v

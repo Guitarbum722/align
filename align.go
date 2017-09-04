@@ -1,4 +1,4 @@
-package main
+package align
 
 import (
 	"bufio"
@@ -10,6 +10,7 @@ import (
 
 const singleSpace = " "
 
+// Justification
 type Justification byte
 
 // Left, Right or Center Justification options
@@ -33,7 +34,7 @@ type TextQualifier struct {
 // PaddingOpts provides configurability for left/center/right Justification and padding length
 type PaddingOpts struct {
 	Justification  Justification
-	columnOverride map[int]Justification //override the Justification of specified columns
+	ColumnOverride map[int]Justification //override the Justification of specified columns
 }
 
 // Align scans input and writes output with aligned text
@@ -54,7 +55,7 @@ type Align struct {
 // It is meant to read the contents of its io.Reader to determine the length of each field
 // and output the results in an aligned format.
 // Left Justification is used by default.  See UpdatePadding to set the Justification.
-func newAlign(in io.Reader, out io.Writer, sep string, qu TextQualifier) *Align {
+func NewAlign(in io.Reader, out io.Writer, sep string, qu TextQualifier) *Align {
 	return &Align{
 		S:            bufio.NewScanner(in),
 		W:            bufio.NewWriter(out),
@@ -68,8 +69,8 @@ func newAlign(in io.Reader, out io.Writer, sep string, qu TextQualifier) *Align 
 	}
 }
 
-// outputSep sets the output separator string with outsep if a different value from the input sep is desired.
-func (a *Align) outputSep(outsep string) {
+// OutputSep sets the output separator string with outsep if a different value from the input sep is desired.
+func (a *Align) OutputSep(outsep string) {
 	a.sepOut = outsep
 }
 
@@ -90,8 +91,8 @@ func (a *Align) columnSize(num int) int {
 	return a.columnCounts[num]
 }
 
-// updatePadding uses PaddingOpts p to update the Aligner's padding options.
-func (a *Align) updatePadding(p PaddingOpts) {
+// UpdatePadding uses PaddingOpts p to update the Aligner's padding options.
+func (a *Align) UpdatePadding(p PaddingOpts) {
 	a.padOpts = p
 }
 
@@ -189,8 +190,8 @@ func (a *Align) export(lines []string) {
 			j := a.padOpts.Justification
 
 			// override Justification for the specified columnNum in the key for the PaddingOpts.columnOverride map
-			if len(a.padOpts.columnOverride) > 0 {
-				for k, v := range a.padOpts.columnOverride {
+			if len(a.padOpts.ColumnOverride) > 0 {
+				for k, v := range a.padOpts.ColumnOverride {
 					if k == columnNum+1 {
 						j = v
 					}
@@ -291,7 +292,8 @@ func (a *Align) splitWithQual(s, sep, qual string) []string {
 	return words
 }
 
-func (a *Align) filterColumns(c []int) {
+// FilterColumns
+func (a *Align) FilterColumns(c []int) {
 	a.filter = c
 	a.filterLen = len(c)
 }
