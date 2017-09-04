@@ -26,5 +26,5 @@ _testmain.go
 debug
 *.csv
 
-align
+./align
 bin/*
