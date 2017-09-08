@@ -153,25 +153,25 @@ var paddingCases = []struct {
 	{
 		"Go",
 		8,
-		PaddingOpts{Justification: JustifyLeft},
+		PaddingOpts{Justification: JustifyLeft, Surround: 1},
 		10,
 	},
 	{
 		"Go",
 		8,
-		PaddingOpts{Justification: JustifyCenter},
+		PaddingOpts{Justification: JustifyCenter, Surround: 1},
 		10,
 	},
 	{
 		"Go",
 		4,
-		PaddingOpts{Justification: JustifyCenter},
+		PaddingOpts{Justification: JustifyCenter, Surround: 1},
 		6,
 	},
 	{
 		"Go",
 		8,
-		PaddingOpts{Justification: JustifyRight},
+		PaddingOpts{Justification: JustifyRight, Surround: 1},
 		10,
 	},
 }
@@ -419,7 +419,7 @@ func TestSplit(t *testing.T) {
 // TestPad
 func TestPad(t *testing.T) {
 	for _, tt := range paddingCases {
-		got := pad(tt.input, 1, tt.columnCount, tt.po.Justification)
+		got := pad(tt.input, 1, tt.columnCount, tt.po.Justification, " ")
 
 		if len(got) != tt.expected {
 			t.Fatalf("pad(%v) =%v; want %v", tt.input, got, tt.expected)
@@ -477,7 +477,7 @@ func TestGenFieldLen(t *testing.T) {
 	got := genFieldLen(s, comma, comma)
 	expected := 2
 	if got != expected {
-		t.Fatalf("genFieldLen(%s, ", ", ", ") = %v; want %v", s, got, expected)
+		t.Fatalf("genFieldLen(%v, %v, %v) = %v; want %v", s, comma, comma, got, expected)
 	}
 }
 
