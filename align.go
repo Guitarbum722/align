@@ -33,7 +33,7 @@ type TextQualifier struct {
 type PaddingOpts struct {
 	Justification  Justification
 	ColumnOverride map[int]Justification //override the Justification of specified columns
-	Surround       int                   // additional padding surrounding separator
+	Pad            int                   // padding surrounding the separator
 }
 
 // Align scans input and writes output with aligned text
@@ -65,7 +65,7 @@ func NewAlign(in io.Reader, out io.Writer, sep string, qu TextQualifier) *Align 
 		padOpts: PaddingOpts{
 			//defaults
 			Justification: JustifyLeft,
-			Surround:      1,
+			Pad:           1,
 		},
 	}
 }
@@ -172,14 +172,14 @@ func (a *Align) columnLength() []string {
 
 // export will pad each field in lines based on the Aligner's column counts
 func (a *Align) export(lines []string) {
-	if a.padOpts.Surround < 0 {
-		a.padOpts.Surround = 0
+	if a.padOpts.Pad < 0 {
+		a.padOpts.Pad = 0
 	}
 
-	surround := make([]byte, 0, a.padOpts.Surround)
+	p := make([]byte, 0, a.padOpts.Pad)
 
-	for i := 0; i < a.padOpts.Surround; i++ {
-		surround = append(surround, ' ')
+	for i := 0; i < a.padOpts.Pad; i++ {
+		p = append(p, ' ')
 	}
 
 	for _, line := range lines {
@@ -209,7 +209,7 @@ func (a *Align) export(lines []string) {
 				}
 			}
 
-			word = pad(word, tempColumn, a.columnCounts[columnNum], j, string(surround))
+			word = applyPadding(word, tempColumn, a.columnCounts[columnNum], j, string(p))
 			columnNum++
 			tempColumn++
 
@@ -229,7 +229,7 @@ func (a *Align) export(lines []string) {
 }
 
 // pad s based on the supplied PaddingOpts
-func pad(s string, columnNum, count int, j Justification, sur string) string {
+func applyPadding(s string, columnNum, count int, j Justification, pad string) string {
 	padLength := countPadding(s, count)
 
 	switch j {
@@ -246,10 +246,12 @@ func pad(s string, columnNum, count int, j Justification, sur string) string {
 		}
 	}
 
-	if columnNum > 0 {
-		s = sur + s
+	if len(pad) > 0 {
+		if columnNum > 0 {
+			s = pad + s
+		}
+		s = s + pad
 	}
-	s = s + sur
 
 	return s
 }

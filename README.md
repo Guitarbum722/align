@@ -95,7 +95,7 @@ first  😮 last     😮 email
 Hector 😮 Gonzalez 😮 h.g@nothing.com
 ```
 
-Add additional padding if desired with the `-p` flag.  Default is 1 space.  If less than 0, then no additional padding will be applied.
+Add additional padding if desired with the `-p` flag.  Default is 1 space, and 0 will output with no additional padding.  If the value supplied is less than 0, then the behavior will be as if it were set to 0 and no padding will be applied.
 ```
 # padding of 4 spaces surrounding the delimiter.
 align -p 4

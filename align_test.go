@@ -153,25 +153,25 @@ var paddingCases = []struct {
 	{
 		"Go",
 		8,
-		PaddingOpts{Justification: JustifyLeft, Surround: 1},
+		PaddingOpts{Justification: JustifyLeft, Pad: 1},
 		10,
 	},
 	{
 		"Go",
 		8,
-		PaddingOpts{Justification: JustifyCenter, Surround: 1},
+		PaddingOpts{Justification: JustifyCenter, Pad: 1},
 		10,
 	},
 	{
 		"Go",
 		4,
-		PaddingOpts{Justification: JustifyCenter, Surround: 1},
+		PaddingOpts{Justification: JustifyCenter, Pad: 1},
 		6,
 	},
 	{
 		"Go",
 		8,
-		PaddingOpts{Justification: JustifyRight, Surround: 1},
+		PaddingOpts{Justification: JustifyRight, Pad: 1},
 		10,
 	},
 }
@@ -419,7 +419,7 @@ func TestSplit(t *testing.T) {
 // TestPad
 func TestPad(t *testing.T) {
 	for _, tt := range paddingCases {
-		got := pad(tt.input, 1, tt.columnCount, tt.po.Justification, " ")
+		got := applyPadding(tt.input, 1, tt.columnCount, tt.po.Justification, " ")
 
 		if len(got) != tt.expected {
 			t.Fatalf("pad(%v) =%v; want %v", tt.input, got, tt.expected)

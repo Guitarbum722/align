@@ -186,25 +186,25 @@ func run() (int, error) {
 		aligner.UpdatePadding(align.PaddingOpts{
 			Justification:  align.JustifyLeft,
 			ColumnOverride: justifyOverrides,
-			Surround:       *pFlag,
+			Pad:            *pFlag,
 		})
 	case "right":
 		aligner.UpdatePadding(align.PaddingOpts{
 			Justification:  align.JustifyRight,
 			ColumnOverride: justifyOverrides,
-			Surround:       *pFlag,
+			Pad:            *pFlag,
 		})
 	case "center":
 		aligner.UpdatePadding(align.PaddingOpts{
 			Justification:  align.JustifyCenter,
 			ColumnOverride: justifyOverrides,
-			Surround:       *pFlag,
+			Pad:            *pFlag,
 		})
 	default:
 		aligner.UpdatePadding(align.PaddingOpts{
 			Justification:  align.JustifyLeft,
 			ColumnOverride: justifyOverrides,
-			Surround:       *pFlag,
+			Pad:            *pFlag,
 		})
 	}
 	aligner.FilterColumns(outColumns)
