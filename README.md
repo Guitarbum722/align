@@ -95,6 +95,12 @@ first  😮 last     😮 email
 Hector 😮 Gonzalez 😮 h.g@nothing.com
 ```
 
+Add additional padding if desired with the `-p` flag.  Default is 1 space.  If less than 0, then no additional padding will be applied.
+```
+# padding of 4 spaces surrounding the delimiter.
+align -p 4
+```
+
 ### Contributions
 
 If you have suggestions or discover a bug, please open an issue.  If you think you can make the fix, please use the Fork / Pull Request on your feature branch approach.
