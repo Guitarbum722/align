@@ -13,7 +13,7 @@ import (
 	"github.com/Guitarbum722/align"
 )
 
-const usage = `Usage: align [-h] [-f] [-o] [-q] [-s] [-d] [-a] [-c] [-i]
+const usage = `Usage: align [-h] [-f] [-o] [-q] [-s] [-d] [-a] [-c] [-i] [-p]
 Options:
   -h | --help  help
   -f           input file.  If not specified, pipe input to stdin
@@ -24,6 +24,7 @@ Options:
   -a           <left>, <right>, <center> justification (default: left)
   -c           output specific fields (default: all fields)
   -i           override justification by column number (e.g. 2:center,5:right)
+  -p           extra padding surrounding delimiter
   `
 
 var (
@@ -37,6 +38,7 @@ var (
 	aFlag    *string
 	cFlag    *string
 	iFlag    *string
+	pFlag    *int
 )
 
 func main() {
@@ -61,6 +63,7 @@ func init() {
 	aFlag = flag.String("a", "left", "")
 	cFlag = flag.String("c", "", "")
 	iFlag = flag.String("i", "", "")
+	pFlag = flag.Int("p", 1, "")
 }
 
 func run() (int, error) {
@@ -180,13 +183,29 @@ func run() (int, error) {
 
 	switch *aFlag {
 	case "left":
-		aligner.UpdatePadding(align.PaddingOpts{Justification: align.JustifyLeft, ColumnOverride: justifyOverrides})
+		aligner.UpdatePadding(align.PaddingOpts{
+			Justification:  align.JustifyLeft,
+			ColumnOverride: justifyOverrides,
+			Pad:            *pFlag,
+		})
 	case "right":
-		aligner.UpdatePadding(align.PaddingOpts{Justification: align.JustifyRight, ColumnOverride: justifyOverrides})
+		aligner.UpdatePadding(align.PaddingOpts{
+			Justification:  align.JustifyRight,
+			ColumnOverride: justifyOverrides,
+			Pad:            *pFlag,
+		})
 	case "center":
-		aligner.UpdatePadding(align.PaddingOpts{Justification: align.JustifyCenter, ColumnOverride: justifyOverrides})
+		aligner.UpdatePadding(align.PaddingOpts{
+			Justification:  align.JustifyCenter,
+			ColumnOverride: justifyOverrides,
+			Pad:            *pFlag,
+		})
 	default:
-		aligner.UpdatePadding(align.PaddingOpts{Justification: align.JustifyLeft, ColumnOverride: justifyOverrides})
+		aligner.UpdatePadding(align.PaddingOpts{
+			Justification:  align.JustifyLeft,
+			ColumnOverride: justifyOverrides,
+			Pad:            *pFlag,
+		})
 	}
 	aligner.FilterColumns(outColumns)
 	aligner.OutputSep(*dFlag)

@@ -153,25 +153,25 @@ var paddingCases = []struct {
 	{
 		"Go",
 		8,
-		PaddingOpts{Justification: JustifyLeft},
+		PaddingOpts{Justification: JustifyLeft, Pad: 1},
 		10,
 	},
 	{
 		"Go",
 		8,
-		PaddingOpts{Justification: JustifyCenter},
+		PaddingOpts{Justification: JustifyCenter, Pad: 0},
 		10,
 	},
 	{
 		"Go",
 		4,
-		PaddingOpts{Justification: JustifyCenter},
+		PaddingOpts{Justification: JustifyCenter, Pad: -1},
 		6,
 	},
 	{
 		"Go",
 		8,
-		PaddingOpts{Justification: JustifyRight},
+		PaddingOpts{Justification: JustifyRight, Pad: 2},
 		10,
 	},
 }
@@ -218,31 +218,41 @@ var exportCases = []struct {
 	input          io.Reader
 	output         io.Writer
 	outColumns     []int
+	overrides      map[int]Justification
+	pad            int
 	numOfDelimiter int
 }{
 	{
 		strings.NewReader("one,two,three\nfour,five,six"),
 		bytes.NewBufferString(""),
 		[]int{1},
+		map[int]Justification{1: JustifyRight},
+		1,
 		1,
 	},
 	{
 		strings.NewReader("first,middle,last"),
 		bytes.NewBufferString(""),
 		[]int{1, 3},
-		0,
+		map[int]Justification{1: JustifyRight},
+		-1,
+		1,
 	},
 	{
 		strings.NewReader("first,middle,last"),
 		bytes.NewBufferString(""),
 		[]int{1, 4},
+		map[int]Justification{1: JustifyRight},
+		0,
 		0,
 	},
 	{
 		strings.NewReader("first,middle,last"),
 		bytes.NewBufferString(""),
 		nil,
-		0,
+		map[int]Justification{1: JustifyRight},
+		1,
+		2,
 	},
 }
 
@@ -358,6 +368,38 @@ var updatePaddingCases = []struct {
 	},
 }
 
+var genFieldLenCases = []struct {
+	input    string
+	sep      string
+	qual     string
+	expected int // len of first field for the input
+}{
+	{
+		"as,df,q,wer,1234,zxc,v",
+		",",
+		"",
+		2,
+	},
+	{
+		"hello|hithere",
+		"|",
+		"",
+		5,
+	},
+	{
+		"hello|\"hith|ere\"",
+		"|",
+		"\"",
+		5,
+	},
+	{
+		"'hello'",
+		",",
+		"'",
+		7,
+	},
+}
+
 // TestUpdatePadding
 func TestUpdatePadding(t *testing.T) {
 	for _, tt := range updatePaddingCases {
@@ -398,6 +440,7 @@ func TestOutputSep(t *testing.T) {
 func TestColumnFilter(t *testing.T) {
 	for _, tt := range exportCases {
 		a := NewAlign(tt.input, tt.output, comma, TextQualifier{})
+		a.UpdatePadding(PaddingOpts{ColumnOverride: tt.overrides, Pad: tt.pad})
 		a.FilterColumns(tt.outColumns)
 
 		a.Align()
@@ -419,7 +462,7 @@ func TestSplit(t *testing.T) {
 // TestPad
 func TestPad(t *testing.T) {
 	for _, tt := range paddingCases {
-		got := pad(tt.input, 1, tt.columnCount, tt.po.Justification)
+		got := applyPadding(tt.input, 1, tt.columnCount, tt.po.Justification, " ")
 
 		if len(got) != tt.expected {
 			t.Fatalf("pad(%v) =%v; want %v", tt.input, got, tt.expected)
@@ -472,12 +515,13 @@ func TestCountPadding(t *testing.T) {
 
 // TestGenFieldLen
 func TestGenFieldLen(t *testing.T) {
-	s := "as,df,q,wer,1234,zxc,v"
-	comma := ","
-	got := genFieldLen(s, comma, comma)
-	expected := 2
-	if got != expected {
-		t.Fatalf("genFieldLen(%s, ", ", ", ") = %v; want %v", s, got, expected)
+
+	for _, tt := range genFieldLenCases {
+		got := genFieldLen(tt.input, tt.sep, tt.qual)
+
+		if got != tt.expected {
+			t.Fatalf("genFieldLen(%v, %v, %v) = %v; want %v", tt.input, tt.sep, tt.qual, got, tt.expected)
+		}
 	}
 }
 

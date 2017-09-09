@@ -35,7 +35,7 @@ $ make release
 ### Usage - CLI examples
 
 ```
-Usage: align [-h] [-f] [-o] [-q] [-s] [-d] [-a] [-c] [-i]
+Usage: align [-h] [-f] [-o] [-q] [-s] [-d] [-a] [-c] [-i] [-p]
 Options:
   -h | --help  help
   -f           input file.  If not specified, pipe input to stdin
@@ -46,6 +46,7 @@ Options:
   -a           <left>, <right>, <center> justification (default: left)
   -c           output specific fields (default: all fields)
   -i           override justification by column number (e.g. 2:center,5:right)
+  -p           extra padding surrounding delimiter
 ```
 
 _Specify your input file, output file, delimiter._
@@ -92,6 +93,12 @@ It is perfectly acceptable to even use emojis as your input/output delimiters.
 ```
 first  😮 last     😮 email
 Hector 😮 Gonzalez 😮 h.g@nothing.com
+```
+
+Add additional padding if desired with the `-p` flag.  Default is 1 space, and 0 will output with no additional padding.  If the value supplied is less than 0, then the behavior will be as if it were set to 0 and no padding will be applied.
+```
+# padding of 4 spaces surrounding the delimiter.
+align -p 4
 ```
 
 ### Contributions

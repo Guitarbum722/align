@@ -8,8 +8,6 @@ import (
 	"github.com/mattn/go-runewidth"
 )
 
-const singleSpace = " "
-
 // Justification
 type Justification byte
 
@@ -35,6 +33,7 @@ type TextQualifier struct {
 type PaddingOpts struct {
 	Justification  Justification
 	ColumnOverride map[int]Justification //override the Justification of specified columns
+	Pad            int                   // padding surrounding the separator
 }
 
 // Align scans input and writes output with aligned text
@@ -64,7 +63,9 @@ func NewAlign(in io.Reader, out io.Writer, sep string, qu TextQualifier) *Align 
 		columnCounts: make(map[int]int),
 		txtq:         qu,
 		padOpts: PaddingOpts{
-			Justification: JustifyLeft, // default
+			//defaults
+			Justification: JustifyLeft,
+			Pad:           1,
 		},
 	}
 }
@@ -171,6 +172,16 @@ func (a *Align) columnLength() []string {
 
 // export will pad each field in lines based on the Aligner's column counts
 func (a *Align) export(lines []string) {
+	if a.padOpts.Pad < 0 {
+		a.padOpts.Pad = 0
+	}
+
+	p := make([]byte, 0, a.padOpts.Pad)
+
+	for i := 0; i < a.padOpts.Pad; i++ {
+		p = append(p, ' ')
+	}
+
 	for _, line := range lines {
 		words := a.splitWithQual(line, a.sep, a.txtq.Qualifier)
 
@@ -198,7 +209,7 @@ func (a *Align) export(lines []string) {
 				}
 			}
 
-			word = pad(word, tempColumn, a.columnCounts[columnNum], j)
+			word = applyPadding(word, tempColumn, a.columnCounts[columnNum], j, string(p))
 			columnNum++
 			tempColumn++
 
@@ -218,7 +229,7 @@ func (a *Align) export(lines []string) {
 }
 
 // pad s based on the supplied PaddingOpts
-func pad(s string, columnNum, count int, j Justification) string {
+func applyPadding(s string, columnNum, count int, j Justification, pad string) string {
 	padLength := countPadding(s, count)
 
 	switch j {
@@ -235,11 +246,12 @@ func pad(s string, columnNum, count int, j Justification) string {
 		}
 	}
 
-	// at least one space to pad every field after the delimiter for readability
-	if columnNum > 0 {
-		s = singleSpace + s
+	if len(pad) > 0 {
+		if columnNum > 0 {
+			s = pad + s
+		}
+		s = s + pad
 	}
-	s = s + singleSpace
 
 	return s
 }
@@ -292,7 +304,7 @@ func (a *Align) splitWithQual(s, sep, qual string) []string {
 	return words
 }
 
-// FilterColumns
+// FilterColumns sets which column numbers should be output.
 func (a *Align) FilterColumns(c []int) {
 	a.filter = c
 	a.filterLen = len(c)
