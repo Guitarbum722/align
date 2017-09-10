@@ -9,6 +9,8 @@ _A general purpose application that aligns text_
 The focus of this application is to provide a fast, efficient, and useful tool for aligning text.
 Its creation is the result of inspiration from several other amazing alignment tools, namely [`column`](http://man7.org/linux/man-pages/man1/column.1.html) or the Sublime Text plugin [`AlignTab`](https://github.com/randy3k/AlignTab).
 
+See the [Wiki](https://github.com/Guitarbum722/align/wiki) for usage examples!
+
 ### Included
 
 * A simple yet useful CLI with options to specify your delimiter, input and output files, etc.
