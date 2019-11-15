@@ -12,27 +12,27 @@ import (
 // contents itself along the right, left, or center.
 type Justification byte
 
-// Left, Right or Center Justification options
+// Left, Right or Center Justification options.
 const (
 	JustifyRight Justification = iota + 1
 	JustifyCenter
 	JustifyLeft
 )
 
-// TextQualifier is used to configure the scanner to account for a text qualifier
+// TextQualifier is used to configure the scanner to account for a text qualifier.
 type TextQualifier struct {
 	On        bool
 	Qualifier string
 }
 
-// PaddingOpts provides configurability for left/center/right Justification and padding length
+// PaddingOpts provides configurability for left/center/right Justification and padding length.
 type PaddingOpts struct {
 	Justification  Justification
 	ColumnOverride map[int]Justification //override the Justification of specified columns
 	Pad            int                   // padding surrounding the separator
 }
 
-// Align scans input and writes output with aligned text
+// Align scans input and writes output with aligned text.
 type Align struct {
 	scanner      *bufio.Scanner
 	writer       *bufio.Writer
@@ -166,7 +166,7 @@ func (a *Align) columnLength() []string {
 	return lines
 }
 
-// export will pad each field in lines based on the Align's column counts
+// export will pad each field in lines based on the Align's column counts.
 func (a *Align) export(lines []string) {
 	if a.padOpts.Pad < 0 {
 		a.padOpts.Pad = 0
@@ -224,7 +224,7 @@ func (a *Align) export(lines []string) {
 	a.writer.Flush()
 }
 
-// pad s based on the supplied PaddingOpts
+// pad s based on the supplied PaddingOpts.
 func applyPadding(s string, columnNum, count int, j Justification, pad string) string {
 	padLength := countPadding(s, count)
 
@@ -252,7 +252,7 @@ func applyPadding(s string, columnNum, count int, j Justification, pad string) s
 	return s
 }
 
-// determines the length of the padding needed
+// determines the length of the padding needed.
 func countPadding(s string, count int) int {
 	padLength := count - len(s)
 	rCount, wordLen := runewidth.StringWidth(s), len(s)
@@ -262,7 +262,7 @@ func countPadding(s string, count int) int {
 	return padLength
 }
 
-// prepends padding
+// prepends padding.
 func leadingPad(s string, padLen int) string {
 	pad := make([]byte, 0, padLen)
 
@@ -273,7 +273,7 @@ func leadingPad(s string, padLen int) string {
 	return string(pad) + s
 }
 
-// appends padding
+// appends padding.
 func trailingPad(s string, padLen int) string {
 	pad := make([]byte, 0, padLen)
 
