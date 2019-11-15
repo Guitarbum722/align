@@ -182,12 +182,6 @@ func run() (int, error) {
 	aligner := align.NewAlign(input, output, *sFlag, qu)
 
 	switch *aFlag {
-	case "left":
-		aligner.UpdatePadding(align.PaddingOpts{
-			Justification:  align.JustifyLeft,
-			ColumnOverride: justifyOverrides,
-			Pad:            *pFlag,
-		})
 	case "right":
 		aligner.UpdatePadding(align.PaddingOpts{
 			Justification:  align.JustifyRight,
