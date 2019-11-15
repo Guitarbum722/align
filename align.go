@@ -34,8 +34,8 @@ type PaddingOpts struct {
 
 // Align scans input and writes output with aligned text
 type Align struct {
-	S            *bufio.Scanner
-	W            *bufio.Writer
+	scanner      *bufio.Scanner
+	writer       *bufio.Writer
 	sep          string // separator string or delimiter
 	sepOut       string
 	columnCounts map[int]int
@@ -52,8 +52,8 @@ type Align struct {
 // Left Justification is used by default.  See UpdatePadding to set the Justification.
 func NewAlign(in io.Reader, out io.Writer, sep string, qu TextQualifier) *Align {
 	return &Align{
-		S:            bufio.NewScanner(in),
-		W:            bufio.NewWriter(out),
+		scanner:      bufio.NewScanner(in),
+		writer:       bufio.NewWriter(out),
 		sep:          sep,
 		sepOut:       sep,
 		columnCounts: make(map[int]int),
@@ -132,11 +132,11 @@ func genFieldLen(s, sep, qual string) int {
 // All of the lines of the io.Reader are returned as a string slice.
 func (a *Align) columnLength() []string {
 	var lines []string
-	for a.S.Scan() {
+	for a.scanner.Scan() {
 		var columnNum int
 		var temp int
 
-		line := a.S.Text()
+		line := a.scanner.Text()
 
 		if a.txtq.On {
 			for start := 0; start < len(line); {
@@ -188,7 +188,7 @@ func (a *Align) export(lines []string) {
 				if !contains(a.filter, columnNum+1) {
 					columnNum++
 					if columnNum == len(words) {
-						a.W.WriteString("\n")
+						a.writer.WriteString("\n")
 					}
 					continue
 				}
@@ -212,16 +212,16 @@ func (a *Align) export(lines []string) {
 			// Do not add a delimiter to the last field
 			// This also properly aligns the output even if there are lines with a different number of fields
 			if a.filterLen > 0 && a.filter[a.filterLen-1] == columnNum {
-				a.W.WriteString(word + "\n")
+				a.writer.WriteString(word + "\n")
 				break
 			} else if columnNum == len(words) {
-				a.W.WriteString(word + "\n")
+				a.writer.WriteString(word + "\n")
 				break
 			}
-			a.W.WriteString(word + a.sepOut)
+			a.writer.WriteString(word + a.sepOut)
 		}
 	}
-	a.W.Flush()
+	a.writer.Flush()
 }
 
 // pad s based on the supplied PaddingOpts
