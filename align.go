@@ -8,12 +8,13 @@ import (
 	"github.com/mattn/go-runewidth"
 )
 
-// Justification
+// Justification is used to set the alignment of the column
+// contents itself along the right, left, or center.
 type Justification byte
 
 // Left, Right or Center Justification options
 const (
-	JustifyRight Justification = iota
+	JustifyRight Justification = iota + 1
 	JustifyCenter
 	JustifyLeft
 )
