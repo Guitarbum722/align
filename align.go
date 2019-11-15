@@ -19,11 +19,6 @@ const (
 	JustifyLeft
 )
 
-// Aligner aligns text based on configuration and options
-type Aligner interface {
-	Align()
-}
-
 // TextQualifier is used to configure the scanner to account for a text qualifier
 type TextQualifier struct {
 	On        bool
@@ -83,9 +78,9 @@ func (a *Align) Align() {
 	a.export(lines)
 }
 
-// columnSize looks up the Aligner's columnCounts key with num and returns the value
+// columnSize looks up the Align's columnCounts key with num and returns the value
 // that was set by ColumnCounts().
-// If num is not a valid key in Aligner.columnCounts, then -1 is returned.
+// If num is not a valid key in Align.columnCounts, then -1 is returned.
 func (a *Align) columnSize(num int) int {
 	if _, ok := a.columnCounts[num]; !ok {
 		return -1
@@ -93,7 +88,7 @@ func (a *Align) columnSize(num int) int {
 	return a.columnCounts[num]
 }
 
-// UpdatePadding uses PaddingOpts p to update the Aligner's padding options.
+// UpdatePadding uses PaddingOpts p to update the Align's padding options.
 func (a *Align) UpdatePadding(p PaddingOpts) {
 	a.padOpts = p
 }
@@ -171,7 +166,7 @@ func (a *Align) columnLength() []string {
 	return lines
 }
 
-// export will pad each field in lines based on the Aligner's column counts
+// export will pad each field in lines based on the Align's column counts
 func (a *Align) export(lines []string) {
 	if a.padOpts.Pad < 0 {
 		a.padOpts.Pad = 0
