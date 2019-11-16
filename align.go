@@ -172,10 +172,10 @@ func (a *Align) export(lines []string) {
 		a.padOpts.Pad = 0
 	}
 
-	p := make([]byte, 0, a.padOpts.Pad)
+	surroundingPad := make([]byte, 0, a.padOpts.Pad)
 
 	for i := 0; i < a.padOpts.Pad; i++ {
-		p = append(p, ' ')
+		surroundingPad = append(surroundingPad, ' ')
 	}
 
 	for _, line := range lines {
@@ -205,7 +205,7 @@ func (a *Align) export(lines []string) {
 				}
 			}
 
-			word = applyPadding(word, tempColumn, a.columnCounts[columnNum], j, string(p))
+			word = applyPadding(word, tempColumn, a.columnCounts[columnNum], j, string(surroundingPad))
 			columnNum++
 			tempColumn++
 
@@ -225,31 +225,46 @@ func (a *Align) export(lines []string) {
 }
 
 // pad s based on the supplied PaddingOpts.
-func applyPadding(s string, columnNum, count int, j Justification, pad string) string {
-	padLength := countPadding(s, count)
+func applyPadding(word string, columnNum, count int, just Justification, surroundingPad string) string {
+	padLength := countPadding(word, count)
 
-	switch j {
+	var sb strings.Builder
+	sb.Grow(padLength + len(word) + (len(surroundingPad) * 2))
+
+	if len(surroundingPad) > 0 {
+		if columnNum > 0 {
+			sb.WriteString(surroundingPad)
+		}
+	}
+
+	switch just {
 	case JustifyLeft:
-		s = trailingPad(s, padLength)
+		sb.WriteString(word)
+		for i := 0; i < padLength; i++ {
+			sb.WriteByte(' ')
+		}
 	case JustifyRight:
-		s = leadingPad(s, padLength)
+		for i := 0; i < padLength; i++ {
+			sb.WriteByte(' ')
+		}
+		sb.WriteString(word)
 	case JustifyCenter:
 		if padLength > 2 {
-			s = trailingPad(s, padLength/2)
-			s = leadingPad(s, padLength-(padLength/2))
+			trailingPad(&sb, padLength/2)
+			sb.WriteString(word)
+			leadingPad(&sb, padLength-(padLength/2))
 		} else {
-			s = trailingPad(s, padLength)
+			sb.WriteString(word)
+			trailingPad(&sb, padLength)
 		}
 	}
 
-	if len(pad) > 0 {
+	if len(surroundingPad) > 0 {
 		if columnNum > 0 {
-			s = pad + s
+			sb.WriteString(surroundingPad)
 		}
-		s = s + pad
 	}
-
-	return s
+	return sb.String()
 }
 
 // determines the length of the padding needed.
@@ -263,25 +278,17 @@ func countPadding(s string, count int) int {
 }
 
 // prepends padding.
-func leadingPad(s string, padLen int) string {
-	pad := make([]byte, 0, padLen)
-
-	for len(pad) < padLen {
-		pad = append(pad, ' ')
+func leadingPad(sb *strings.Builder, padLen int) {
+	for i := 0; i < padLen; i++ {
+		sb.WriteByte(' ')
 	}
-
-	return string(pad) + s
 }
 
 // appends padding.
-func trailingPad(s string, padLen int) string {
-	pad := make([]byte, 0, padLen)
-
-	for len(pad) < padLen {
-		pad = append(pad, ' ')
+func trailingPad(sb *strings.Builder, padLen int) {
+	for i := 0; i < padLen; i++ {
+		sb.WriteByte(' ')
 	}
-
-	return s + string(pad)
 }
 
 // splitWithQual basically works like the standard strings.Split() func, but will consider a text qualifier if set.

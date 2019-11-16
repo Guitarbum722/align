@@ -544,7 +544,7 @@ Karleigh,Destiny,Dean,nunc.In@lorem.edu,Stockholms län,Märsta,9038,Shaine Reil
 Alisa,Walker,Armand,Sed@Nuncmauriselit.com,Himachal Pradesh,Shimla,MZ0 4QS,Olivia Velez ,Alisa,Walker,Armand,Sed@Nuncmauriselit.com,Himachal Pradesh,Shimla,MZ0 4QS,Olivia Velez ,Alisa,Walker,Armand,Sed@Nuncmauriselit.com,Himachal Pradesh,Shimla,MZ0 4QS,Olivia Velez
 `
 
-	a := NewAlign(strings.NewReader(input), os.Stdout, comma, TextQualifier{On: false})
+	a := NewAlign(strings.NewReader(input), &bytes.Buffer{}, comma, TextQualifier{On: false})
 
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -558,7 +558,7 @@ Alisa,Walker,Armand,Sed@Nuncmauriselit.com,Himachal Pradesh,Shimla,MZ0 4QS,Olivi
 func BenchmarkSplitWithQual(b *testing.B) {
 	input := "First,\"Middle, name\",Last,Email,Region,City,Zip,Full_Name"
 
-	a := NewAlign(strings.NewReader(input), os.Stdout, comma, TextQualifier{On: true, Qualifier: "\""})
+	a := NewAlign(strings.NewReader(input), &bytes.Buffer{}, comma, TextQualifier{On: true, Qualifier: "\""})
 
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -572,12 +572,26 @@ func BenchmarkSplitWithQual(b *testing.B) {
 func BenchmarkSplitWithQualNoQual(b *testing.B) {
 	input := "First,Middle,Last,Email,Region,City,Zip,Full_Name"
 
-	a := NewAlign(strings.NewReader(input), os.Stdout, comma, TextQualifier{On: false})
+	a := NewAlign(strings.NewReader(input), &bytes.Buffer{}, comma, TextQualifier{On: false})
 
 	b.ReportAllocs()
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
 		a.splitWithQual(input, comma, "\"")
+	}
+}
+
+func BenchmarkExport(b *testing.B) {
+	input := "First,Middle,Last,Email,Region,City,Zip,Full_Name"
+
+	a := NewAlign(strings.NewReader(input), &bytes.Buffer{}, comma, TextQualifier{On: false})
+	lines := a.columnLength()
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		a.export(lines)
 	}
 }
