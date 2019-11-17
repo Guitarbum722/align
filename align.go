@@ -261,9 +261,6 @@ func applyPadding(word string, columnNum, count int, just Justification, surroun
 			for i := 0; i < (padLength / 2); i++ {
 				sb.WriteByte(' ')
 			}
-			// trailingPad(&sb, padLength/2)
-			// sb.WriteString(word)
-			// leadingPad(&sb, padLength-(padLength/2))
 		} else {
 			sb.WriteString(word)
 			for i := 0; i < padLength; i++ {
