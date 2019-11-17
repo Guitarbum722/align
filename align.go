@@ -224,7 +224,9 @@ func (a *Align) export(lines []string) {
 	a.writer.Flush()
 }
 
-// pad s based on the supplied PaddingOpts.
+// applyPadding rebuilds word by adding padding appropriately based on the
+// desired justification, the overall column count and the supplied surrounding
+// padding string.
 func applyPadding(word string, columnNum, count int, just Justification, surroundingPad string) string {
 	padLength := countPadding(word, count)
 
@@ -250,13 +252,23 @@ func applyPadding(word string, columnNum, count int, just Justification, surroun
 		}
 		sb.WriteString(word)
 	case JustifyCenter:
+		// not much of a point to 'center' justification with such a small padding; default it if <= 2.
 		if padLength > 2 {
-			trailingPad(&sb, padLength/2)
+			for i := 0; i < (padLength - (padLength / 2)); i++ {
+				sb.WriteByte(' ')
+			}
 			sb.WriteString(word)
-			leadingPad(&sb, padLength-(padLength/2))
+			for i := 0; i < (padLength / 2); i++ {
+				sb.WriteByte(' ')
+			}
+			// trailingPad(&sb, padLength/2)
+			// sb.WriteString(word)
+			// leadingPad(&sb, padLength-(padLength/2))
 		} else {
 			sb.WriteString(word)
-			trailingPad(&sb, padLength)
+			for i := 0; i < padLength; i++ {
+				sb.WriteByte(' ')
+			}
 		}
 	}
 
