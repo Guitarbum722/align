@@ -2,6 +2,7 @@ package align
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"strings"
@@ -58,7 +59,7 @@ type PadGrower interface {
 // fieldPad ructs the contents of a field
 // with padding.
 type fieldPad struct {
-	strings.Builder
+	bytes.Buffer
 }
 
 // Align scans input and writes output with aligned text.
@@ -245,7 +246,7 @@ func (a *Align) export() {
 			}
 
 			padLength := countPadding(word, a.columnCounts[columnNum])
-			a.padder.Grow(padLength + len(word) + (len(surroundingPad) * 2)) // TODO: might be able to do this once
+			// a.padder.Grow(padLength + len(word) + (len(surroundingPad) * 2)) // TODO: might be able to do this once
 
 			word = applyPadding(a.padder, word, string(surroundingPad), tempColumn, padLength, j)
 
