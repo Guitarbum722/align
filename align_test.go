@@ -148,30 +148,35 @@ var paddingCases = []struct {
 	input       string
 	columnCount int
 	po          PaddingOpts
+	pad         Padder
 	expected    int
 }{
 	{
 		"Go",
 		8,
 		PaddingOpts{Justification: JustifyLeft, Pad: 1},
+		&fieldPad{},
 		10,
 	},
 	{
 		"Go",
 		8,
 		PaddingOpts{Justification: JustifyCenter, Pad: 0},
+		&fieldPad{},
 		10,
 	},
 	{
 		"Go",
 		4,
 		PaddingOpts{Justification: JustifyCenter, Pad: -1},
+		&fieldPad{},
 		6,
 	},
 	{
 		"Go",
 		8,
 		PaddingOpts{Justification: JustifyRight, Pad: 2},
+		&fieldPad{},
 		10,
 	},
 }
@@ -461,11 +466,12 @@ func TestSplit(t *testing.T) {
 
 // TestPad
 func TestPad(t *testing.T) {
-	for _, tt := range paddingCases[:1] {
-		got := applyPadding(tt.input, 1, tt.columnCount, tt.po.Justification, " ")
+	for _, tt := range paddingCases {
+		padLen := countPadding(tt.input, tt.columnCount)
+		got := applyPadding(tt.pad, tt.input, " ", 1, padLen, tt.po.Justification)
 
 		if len(got) != tt.expected {
-			t.Fatalf("pad(%v) =%v; want %v", tt.input, len(got), tt.expected)
+			t.Fatalf("pad(%v) =%v; want %v", tt.input, got, tt.expected)
 		}
 	}
 }
@@ -586,12 +592,12 @@ func BenchmarkExport(b *testing.B) {
 	input := "First,Middle,Last,Email,Region,City,Zip,Full_Name"
 
 	a := NewAlign(strings.NewReader(input), &bytes.Buffer{}, comma, TextQualifier{On: false})
-	lines := a.columnLength()
+	a.columnLength()
 
 	b.ReportAllocs()
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
-		a.export(lines)
+		a.export()
 	}
 }
