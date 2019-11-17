@@ -231,6 +231,7 @@ func applyPadding(word string, columnNum, count int, just Justification, surroun
 	var sb strings.Builder
 	sb.Grow(padLength + len(word) + (len(surroundingPad) * 2))
 
+	// add surrounding pad to beginning of column (except for the 1st column)
 	if len(surroundingPad) > 0 {
 		if columnNum > 0 {
 			sb.WriteString(surroundingPad)
@@ -259,10 +260,9 @@ func applyPadding(word string, columnNum, count int, just Justification, surroun
 		}
 	}
 
+	// add surrounding pad to end of column
 	if len(surroundingPad) > 0 {
-		if columnNum > 0 {
-			sb.WriteString(surroundingPad)
-		}
+		sb.WriteString(surroundingPad)
 	}
 	return sb.String()
 }

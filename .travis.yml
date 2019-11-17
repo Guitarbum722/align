@@ -7,7 +7,6 @@ os:
   - linux
   - freebsd
   - osx
-  - windows
 before_install:
   - go get github.com/mattn/goveralls
 notifications:
