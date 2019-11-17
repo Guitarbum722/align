@@ -34,8 +34,10 @@ type PaddingOpts struct {
 }
 
 // Grower grows by the given number of bytes n.
+// Reset will set the Grower to 0.
 type Grower interface {
 	Grow(n int)
+	Reset()
 }
 
 // Padder builds a string and can return its string value.
@@ -243,9 +245,12 @@ func (a *Align) export() {
 			}
 
 			padLength := countPadding(word, a.columnCounts[columnNum])
-			a.padder.Grow(padLength + len(word) + (len(surroundingPad) * 2))
+			a.padder.Grow(padLength + len(word) + (len(surroundingPad) * 2)) // TODO: might be able to do this once
 
 			word = applyPadding(a.padder, word, string(surroundingPad), tempColumn, padLength, j)
+
+			a.padder.Reset() // empty the buffer for the next iteration.
+
 			columnNum++
 			tempColumn++
 
