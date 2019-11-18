@@ -248,7 +248,7 @@ func (a *Align) export() {
 			padLength := countPadding(word, a.columnCounts[columnNum])
 			// a.padder.Grow(padLength + len(word) + (len(surroundingPad) * 2)) // TODO: might be able to do this once
 
-			word = applyPadding(a.padder, word, string(surroundingPad), tempColumn, padLength, j)
+			paddedWord := applyPadding(a.padder, word, string(surroundingPad), tempColumn, padLength, j)
 
 			a.padder.Reset() // empty the buffer for the next iteration.
 
@@ -258,13 +258,13 @@ func (a *Align) export() {
 			// Do not add a delimiter to the last field
 			// This also properly aligns the output even if there are lines with a different number of fields
 			if a.filterLen > 0 && a.filter[a.filterLen-1] == columnNum {
-				a.writer.WriteString(word + "\n")
+				a.writer.WriteString(paddedWord + "\n")
 				break
-			} else if columnNum == len(words) {
-				a.writer.WriteString(word + "\n")
+			} else if columnNum == len(paddedWord) {
+				a.writer.WriteString(paddedWord + "\n")
 				break
 			}
-			a.writer.WriteString(word + a.sepOut)
+			a.writer.WriteString(paddedWord + a.sepOut)
 		}
 	}
 	a.writer.Flush()
