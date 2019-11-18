@@ -47,6 +47,7 @@ type Padder interface {
 	fmt.Stringer
 	WriteByte(c byte) error
 	WriteString(s string) (int, error)
+	Bytes() []byte
 }
 
 // PadGrower makes a string with the ability to
@@ -255,14 +256,13 @@ func (a *Align) export() {
 
 			// Do not add a delimiter to the last field
 			// This also properly aligns the output even if there are lines with a different number of fields
-			if a.filterLen > 0 && a.filter[a.filterLen-1] == columnNum {
-				a.writer.WriteString(paddedWord + "\n")
-				break
-			} else if columnNum == len(paddedWord) {
-				a.writer.WriteString(paddedWord + "\n")
+			if a.filterLen > 0 && a.filter[a.filterLen-1] == columnNum || columnNum == len(paddedWord) {
+				a.writer.Write(paddedWord)
+				a.writer.WriteByte('\n')
 				break
 			}
-			a.writer.WriteString(paddedWord + a.sepOut)
+			a.writer.Write(paddedWord)
+			a.writer.WriteString(a.sepOut)
 		}
 	}
 	a.writer.Flush()
@@ -277,7 +277,7 @@ func fillWithPadding(padder Padder, length int) {
 // applyPadding rebuilds word by adding padding appropriately based on the
 // desired justification, the overall padding length and the supplied surrounding
 // padding string.
-func applyPadding(padder Padder, original, surroundingPad string, columnNum, padLength int, just Justification) string {
+func applyPadding(padder Padder, original, surroundingPad string, columnNum, padLength int, just Justification) []byte {
 
 	// add surrounding pad to beginning of column (except for the 1st column)
 	if len(surroundingPad) > 0 {
@@ -309,7 +309,7 @@ func applyPadding(padder Padder, original, surroundingPad string, columnNum, pad
 	if len(surroundingPad) > 0 {
 		padder.WriteString(surroundingPad)
 	}
-	return padder.String()
+	return padder.Bytes()
 }
 
 // determines the length of the padding needed.
