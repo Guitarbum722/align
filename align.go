@@ -268,6 +268,12 @@ func (a *Align) export() {
 	a.writer.Flush()
 }
 
+func fillWithPadding(padder Padder, length int) {
+	for i := 0; i < length; i++ {
+		padder.WriteByte(padchar)
+	}
+}
+
 // applyPadding rebuilds word by adding padding appropriately based on the
 // desired justification, the overall padding length and the supplied surrounding
 // padding string.
@@ -283,29 +289,19 @@ func applyPadding(padder Padder, original, surroundingPad string, columnNum, pad
 	switch just {
 	case JustifyLeft:
 		padder.WriteString(original)
-		for i := 0; i < padLength; i++ {
-			padder.WriteByte(padchar)
-		}
+		fillWithPadding(padder, padLength)
 	case JustifyRight:
-		for i := 0; i < padLength; i++ {
-			padder.WriteByte(padchar)
-		}
+		fillWithPadding(padder, padLength)
 		padder.WriteString(original)
 	case JustifyCenter:
 		// not much of a point to 'center' justification with such a small padding; default it if <= 2.
 		if padLength > 2 {
-			for i := 0; i < (padLength - (padLength / 2)); i++ {
-				padder.WriteByte(padchar)
-			}
+			fillWithPadding(padder, (padLength - (padLength / 2)))
 			padder.WriteString(original)
-			for i := 0; i < (padLength / 2); i++ {
-				padder.WriteByte(padchar)
-			}
+			fillWithPadding(padder, padLength/2)
 		} else {
 			padder.WriteString(original)
-			for i := 0; i < padLength; i++ {
-				padder.WriteByte(padchar)
-			}
+			fillWithPadding(padder, padLength)
 		}
 	}
 
