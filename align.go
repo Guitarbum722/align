@@ -214,7 +214,6 @@ func (a *Align) export() {
 	}
 
 	surroundingPad := make([]byte, 0, a.padOpts.Pad)
-
 	for i := 0; i < a.padOpts.Pad; i++ {
 		surroundingPad = append(surroundingPad, padchar)
 	}
@@ -278,7 +277,6 @@ func fillWithPadding(padder Padder, length int) {
 // desired justification, the overall padding length and the supplied surrounding
 // padding string.
 func applyPadding(padder Padder, original, surroundingPad string, columnNum, padLength int, just Justification) []byte {
-
 	// add surrounding pad to beginning of column (except for the 1st column)
 	if len(surroundingPad) > 0 {
 		if columnNum > 0 {
