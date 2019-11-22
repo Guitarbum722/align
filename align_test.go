@@ -148,30 +148,35 @@ var paddingCases = []struct {
 	input       string
 	columnCount int
 	po          PaddingOpts
+	pad         Padder
 	expected    int
 }{
 	{
 		"Go",
 		8,
 		PaddingOpts{Justification: JustifyLeft, Pad: 1},
+		&fieldPad{},
 		10,
 	},
 	{
 		"Go",
 		8,
 		PaddingOpts{Justification: JustifyCenter, Pad: 0},
+		&fieldPad{},
 		10,
 	},
 	{
 		"Go",
 		4,
 		PaddingOpts{Justification: JustifyCenter, Pad: -1},
+		&fieldPad{},
 		6,
 	},
 	{
 		"Go",
 		8,
 		PaddingOpts{Justification: JustifyRight, Pad: 2},
+		&fieldPad{},
 		10,
 	},
 }
@@ -462,7 +467,8 @@ func TestSplit(t *testing.T) {
 // TestPad
 func TestPad(t *testing.T) {
 	for _, tt := range paddingCases {
-		got := applyPadding(tt.input, 1, tt.columnCount, tt.po.Justification, " ")
+		padLen := countPadding(tt.input, tt.columnCount)
+		got := applyPadding(tt.pad, tt.input, " ", 1, padLen, tt.po.Justification)
 
 		if len(got) != tt.expected {
 			t.Fatalf("pad(%v) =%v; want %v", tt.input, got, tt.expected)
@@ -544,7 +550,7 @@ Karleigh,Destiny,Dean,nunc.In@lorem.edu,Stockholms län,Märsta,9038,Shaine Reil
 Alisa,Walker,Armand,Sed@Nuncmauriselit.com,Himachal Pradesh,Shimla,MZ0 4QS,Olivia Velez ,Alisa,Walker,Armand,Sed@Nuncmauriselit.com,Himachal Pradesh,Shimla,MZ0 4QS,Olivia Velez ,Alisa,Walker,Armand,Sed@Nuncmauriselit.com,Himachal Pradesh,Shimla,MZ0 4QS,Olivia Velez
 `
 
-	a := NewAlign(strings.NewReader(input), os.Stdout, comma, TextQualifier{On: false})
+	a := NewAlign(strings.NewReader(input), &bytes.Buffer{}, comma, TextQualifier{On: false})
 
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -558,7 +564,7 @@ Alisa,Walker,Armand,Sed@Nuncmauriselit.com,Himachal Pradesh,Shimla,MZ0 4QS,Olivi
 func BenchmarkSplitWithQual(b *testing.B) {
 	input := "First,\"Middle, name\",Last,Email,Region,City,Zip,Full_Name"
 
-	a := NewAlign(strings.NewReader(input), os.Stdout, comma, TextQualifier{On: true, Qualifier: "\""})
+	a := NewAlign(strings.NewReader(input), &bytes.Buffer{}, comma, TextQualifier{On: true, Qualifier: "\""})
 
 	b.ReportAllocs()
 	b.ResetTimer()
@@ -572,12 +578,26 @@ func BenchmarkSplitWithQual(b *testing.B) {
 func BenchmarkSplitWithQualNoQual(b *testing.B) {
 	input := "First,Middle,Last,Email,Region,City,Zip,Full_Name"
 
-	a := NewAlign(strings.NewReader(input), os.Stdout, comma, TextQualifier{On: false})
+	a := NewAlign(strings.NewReader(input), &bytes.Buffer{}, comma, TextQualifier{On: false})
 
 	b.ReportAllocs()
 	b.ResetTimer()
 
 	for i := 0; i < b.N; i++ {
 		a.splitWithQual(input, comma, "\"")
+	}
+}
+
+func BenchmarkExport(b *testing.B) {
+	input := "First,Middle,Last,Email,Region,City,Zip,Full_Name"
+
+	a := NewAlign(strings.NewReader(input), &bytes.Buffer{}, comma, TextQualifier{On: false})
+	a.columnLength()
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		a.export()
 	}
 }

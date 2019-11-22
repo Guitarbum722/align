@@ -2,6 +2,8 @@ package align
 
 import (
 	"bufio"
+	"bytes"
+	"fmt"
 	"io"
 	"strings"
 
@@ -32,6 +34,35 @@ type PaddingOpts struct {
 	Pad            int                   // padding surrounding the separator
 }
 
+// Grower grows by the given number of bytes n.
+// Reset will set the Grower to 0.
+type Grower interface {
+	Grow(n int)
+	Reset()
+}
+
+// Padder builds a string and can return its string value.
+type Padder interface {
+	io.Writer
+	fmt.Stringer
+	WriteByte(c byte) error
+	WriteString(s string) (int, error)
+	Bytes() []byte
+}
+
+// PadGrower makes a string with the ability to
+// grow the underlying buffer.
+type PadGrower interface {
+	Grower
+	Padder
+}
+
+// fieldPad ructs the contents of a field
+// with padding.
+type fieldPad struct {
+	bytes.Buffer
+}
+
 // Align scans input and writes output with aligned text.
 type Align struct {
 	scanner      *bufio.Scanner
@@ -43,6 +74,8 @@ type Align struct {
 	padOpts      PaddingOpts
 	filter       []int
 	filterLen    int
+	lines        []string
+	padder       PadGrower
 }
 
 // NewAlign creates and initializes a ScanWriter with in and out as its initial Reader and Writer
@@ -63,6 +96,7 @@ func NewAlign(in io.Reader, out io.Writer, sep string, qu TextQualifier) *Align 
 			Justification: JustifyLeft,
 			Pad:           1,
 		},
+		padder: &fieldPad{}, // default; set with UpdatePadder()
 	}
 }
 
@@ -74,8 +108,8 @@ func (a *Align) OutputSep(outsep string) {
 // Align determines the length of each field of text around the configured delimiter and aligns all of the
 // text by the delimiter.
 func (a *Align) Align() {
-	lines := a.columnLength()
-	a.export(lines)
+	a.columnLength()
+	a.export()
 }
 
 // columnSize looks up the Align's columnCounts key with num and returns the value
@@ -91,6 +125,12 @@ func (a *Align) columnSize(num int) int {
 // UpdatePadding uses PaddingOpts p to update the Align's padding options.
 func (a *Align) UpdatePadding(p PaddingOpts) {
 	a.padOpts = p
+}
+
+// UpdatePadder sets the Align's padder implementation if a different
+// one is desired from the default.
+func (a *Align) UpdatePadder(padder PadGrower) {
+	a.padder = padder
 }
 
 // fieldLen works in a similar manner to the standard lib function strings.Index().
@@ -130,8 +170,9 @@ func genFieldLen(s, sep, qual string) int {
 // columnLength scans the input and determines the maximum length of each field based on
 // the longest value for each field in all of the pertaining lines.
 // All of the lines of the io.Reader are returned as a string slice.
-func (a *Align) columnLength() []string {
-	var lines []string
+func (a *Align) columnLength() {
+	a.lines = make([]string, 0)
+
 	for a.scanner.Scan() {
 		var columnNum int
 		var temp int
@@ -160,25 +201,24 @@ func (a *Align) columnLength() []string {
 			}
 		}
 
-		lines = append(lines, line)
+		a.lines = append(a.lines, line)
 	}
-
-	return lines
 }
 
+const padchar byte = ' '
+
 // export will pad each field in lines based on the Align's column counts.
-func (a *Align) export(lines []string) {
+func (a *Align) export() {
 	if a.padOpts.Pad < 0 {
 		a.padOpts.Pad = 0
 	}
 
-	p := make([]byte, 0, a.padOpts.Pad)
-
+	surroundingPad := make([]byte, 0, a.padOpts.Pad)
 	for i := 0; i < a.padOpts.Pad; i++ {
-		p = append(p, ' ')
+		surroundingPad = append(surroundingPad, padchar)
 	}
 
-	for _, line := range lines {
+	for _, line := range a.lines {
 		words := a.splitWithQual(line, a.sep, a.txtq.Qualifier)
 
 		var columnNum int
@@ -205,51 +245,69 @@ func (a *Align) export(lines []string) {
 				}
 			}
 
-			word = applyPadding(word, tempColumn, a.columnCounts[columnNum], j, string(p))
+			padLength := countPadding(word, a.columnCounts[columnNum])
+			paddedWord := applyPadding(a.padder, word, string(surroundingPad), tempColumn, padLength, j)
+
+			a.padder.Reset() // empty the buffer for the next iteration.
+
 			columnNum++
 			tempColumn++
 
 			// Do not add a delimiter to the last field
 			// This also properly aligns the output even if there are lines with a different number of fields
-			if a.filterLen > 0 && a.filter[a.filterLen-1] == columnNum {
-				a.writer.WriteString(word + "\n")
-				break
-			} else if columnNum == len(words) {
-				a.writer.WriteString(word + "\n")
+			if a.filterLen > 0 && a.filter[a.filterLen-1] == columnNum || columnNum == len(paddedWord) {
+				a.writer.Write(paddedWord)
+				a.writer.WriteByte('\n')
 				break
 			}
-			a.writer.WriteString(word + a.sepOut)
+			a.writer.Write(paddedWord)
+			a.writer.WriteString(a.sepOut)
 		}
 	}
 	a.writer.Flush()
 }
 
-// pad s based on the supplied PaddingOpts.
-func applyPadding(s string, columnNum, count int, j Justification, pad string) string {
-	padLength := countPadding(s, count)
-
-	switch j {
-	case JustifyLeft:
-		s = trailingPad(s, padLength)
-	case JustifyRight:
-		s = leadingPad(s, padLength)
-	case JustifyCenter:
-		if padLength > 2 {
-			s = trailingPad(s, padLength/2)
-			s = leadingPad(s, padLength-(padLength/2))
-		} else {
-			s = trailingPad(s, padLength)
-		}
+func fillWithPadding(padder Padder, length int) {
+	for i := 0; i < length; i++ {
+		padder.WriteByte(padchar)
 	}
+}
 
-	if len(pad) > 0 {
+// applyPadding rebuilds word by adding padding appropriately based on the
+// desired justification, the overall padding length and the supplied surrounding
+// padding string.
+func applyPadding(padder Padder, original, surroundingPad string, columnNum, padLength int, just Justification) []byte {
+	// add surrounding pad to beginning of column (except for the 1st column)
+	if len(surroundingPad) > 0 {
 		if columnNum > 0 {
-			s = pad + s
+			padder.WriteString(surroundingPad)
 		}
-		s = s + pad
 	}
 
-	return s
+	switch just {
+	case JustifyLeft:
+		padder.WriteString(original)
+		fillWithPadding(padder, padLength)
+	case JustifyRight:
+		fillWithPadding(padder, padLength)
+		padder.WriteString(original)
+	case JustifyCenter:
+		// not much of a point to 'center' justification with such a small padding; default it if <= 2.
+		if padLength > 2 {
+			fillWithPadding(padder, (padLength - (padLength / 2)))
+			padder.WriteString(original)
+			fillWithPadding(padder, padLength/2)
+		} else {
+			padder.WriteString(original)
+			fillWithPadding(padder, padLength)
+		}
+	}
+
+	// add surrounding pad to end of column
+	if len(surroundingPad) > 0 {
+		padder.WriteString(surroundingPad)
+	}
+	return padder.Bytes()
 }
 
 // determines the length of the padding needed.
@@ -263,25 +321,17 @@ func countPadding(s string, count int) int {
 }
 
 // prepends padding.
-func leadingPad(s string, padLen int) string {
-	pad := make([]byte, 0, padLen)
-
-	for len(pad) < padLen {
-		pad = append(pad, ' ')
+func leadingPad(sb *strings.Builder, padLen int) {
+	for i := 0; i < padLen; i++ {
+		sb.WriteByte(padchar)
 	}
-
-	return string(pad) + s
 }
 
 // appends padding.
-func trailingPad(s string, padLen int) string {
-	pad := make([]byte, 0, padLen)
-
-	for len(pad) < padLen {
-		pad = append(pad, ' ')
+func trailingPad(sb *strings.Builder, padLen int) {
+	for i := 0; i < padLen; i++ {
+		sb.WriteByte(padchar)
 	}
-
-	return s + string(pad)
 }
 
 // splitWithQual basically works like the standard strings.Split() func, but will consider a text qualifier if set.
