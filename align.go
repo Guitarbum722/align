@@ -255,7 +255,7 @@ func (a *Align) export() {
 
 			// Do not add a delimiter to the last field
 			// This also properly aligns the output even if there are lines with a different number of fields
-			if a.filterLen > 0 && a.filter[a.filterLen-1] == columnNum || columnNum == len(paddedWord) {
+			if a.filterLen > 0 && a.filter[a.filterLen-1] == columnNum || columnNum == len(words) {
 				a.writer.Write(paddedWord)
 				a.writer.WriteByte('\n')
 				break
