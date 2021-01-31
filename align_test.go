@@ -601,3 +601,30 @@ func BenchmarkExport(b *testing.B) {
 		a.export()
 	}
 }
+
+func TestExportLastColumnEmpty(t *testing.T) {
+	input := `First,Middle,Last,Email,Phone
+k,o,doe,no-email,
+dewey,ben,finn,dewey@finn.com,""
+daffy,,"duck, jr.",theduck@dland.com,
+bilbo,,baggins,bilbo@nothing.com,444
+`
+
+	out := &bytes.Buffer{}
+
+	a := NewAlign(strings.NewReader(input), out, comma, TextQualifier{On: true, Qualifier: `"`})
+	a.Align()
+
+	got := out.String()
+
+	expected := `First , Middle , Last        , Email             , Phone 
+k     , o      , doe         , no-email          ,       
+dewey , ben    , finn        , dewey@finn.com    , ""    
+daffy ,        , "duck, jr." , theduck@dland.com ,       
+bilbo ,        , baggins     , bilbo@nothing.com , 444   
+`
+
+	if got != expected {
+		t.Fatalf("export() = \n%v; want\n%v", got, expected)
+	}
+}

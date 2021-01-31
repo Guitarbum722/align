@@ -341,7 +341,7 @@ func (a *Align) splitWithQual(s, sep, qual string) []string {
 	}
 	var words = make([]string, 0, strings.Count(s, sep))
 
-	for start := 0; start < len(s); {
+	for start := 0; start <= len(s); {
 		count := genFieldLen(s[start:], sep, qual)
 		words = append(words, s[start:start+count])
 		start += count + len(sep)
