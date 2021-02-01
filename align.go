@@ -148,7 +148,7 @@ func fieldLenEscaped(s, sep, qual string) int {
 }
 
 func genFieldLen(s, sep, qual string) int {
-	i := 0
+	var i int
 	if qual == "" || !strings.HasPrefix(s, qual) {
 		i = strings.Index(s, sep)
 	} else {
