@@ -148,23 +148,23 @@ func fieldLenEscaped(s, sep, qual string) int {
 }
 
 func genFieldLen(s, sep, qual string) int {
-	var i int
-	if qual == "" || !strings.HasPrefix(s, qual) {
-		i = strings.Index(s, sep)
-	} else {
-		i = strings.Index(s, qual+sep)
+	var endIdx int
+	if len(qual) > 0 && strings.HasPrefix(s, qual) {
+		endIdx += len(qual)
 
-		if i == -1 {
-			return len(s)
-		}
-		return len(s[:i+len(qual)])
+		endIdx += strings.Index(s[endIdx:], qual) + len(qual)
+
+		return len(s[:endIdx])
 	}
 
-	if i == -1 {
+	endIdx += strings.Index(s, sep)
+
+	if endIdx == -1 {
+		// last field
 		return len(s)
 	}
 
-	return len(s[:i])
+	return len(s[:endIdx])
 }
 
 // columnLength scans the input and determines the maximum length of each field based on
