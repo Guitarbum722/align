@@ -628,3 +628,98 @@ bilbo ,        , baggins     , bilbo@nothing.com , 444
 		t.Fatalf("export() = \n%v; want\n%v", got, expected)
 	}
 }
+
+func Test_genFieldLen(t *testing.T) {
+	type args struct {
+		s    string
+		sep  string
+		qual string
+	}
+	tests := []struct {
+		name string
+		args args
+		want int
+	}{
+		{
+			name: "Basic length",
+			args: args{
+				s:    "John",
+				sep:  ",",
+				qual: "\"",
+			},
+			want: 4,
+		},
+		{
+			name: "Qualified Len",
+			args: args{
+				s:    "\"John\"",
+				sep:  ",",
+				qual: "\"",
+			},
+			want: 6,
+		},
+		{
+			name: "Qualified Len with sep",
+			args: args{
+				s:    "\"John, M.\"",
+				sep:  ",",
+				qual: "\"",
+			},
+			want: 10,
+		},
+		{
+			name: "Qualified Len with space and sep",
+			args: args{
+				s:    "\" ,\"",
+				sep:  ",",
+				qual: "\"",
+			},
+			want: 4,
+		},
+		{
+			name: "Qualified Len with sep at start",
+			args: args{
+				s:    "\", abc\"",
+				sep:  ",",
+				qual: "\"",
+			},
+			want: 7,
+		},
+		{
+			name: "Qualified Len with sep at start not last field",
+			args: args{
+				s:    "\", abc\", ,",
+				sep:  ",",
+				qual: "\"",
+			},
+			want: 7,
+		},
+		{
+			name: "No qualifier not last field",
+			args: args{
+				s:    "abc d, ,",
+				sep:  ",",
+				qual: "",
+			},
+			want: 5,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := genFieldLen(tt.args.s, tt.args.sep, tt.args.qual); got != tt.want {
+				t.Errorf("genFieldLen() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func BenchmarkGenFieldLen(b *testing.B) {
+	s := "\" , abc\", ,"
+
+	b.ReportAllocs()
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		genFieldLen(s, ",", "\"")
+	}
+}
