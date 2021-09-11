@@ -4,18 +4,14 @@ ARCHS="darwin linux freebsd windows"
 CMD_DIR="cmd/align"
 BUILD_CMD="go build -v -o"
 
-if [ $1 == "release" ]; then
-    echo "Generating align release binaries..."
-    for arch in ${ARCHS}; do
-        GOOS=${arch} GOARCH=amd64 ${BUILD_CMD} bin/align-${arch}
-    done
-fi
-
 case "$1" in
     "release") 
         echo "Building release..."
+        # cd ${CMD_DIR}
         for arch in ${ARCHS}; do
-            GOOS=${arch} GOARCH=amd64 go build -v -o bin/align-${arch}
+            cd ${CMD_DIR}
+            GOOS=${arch} GOARCH=amd64 ${BUILD_CMD} ../../bin/align-${arch}
+            cd ../..
             tar -czvf bin/align-${arch}.tar.gz bin/align-${arch}
         done
         ;;

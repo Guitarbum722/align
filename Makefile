@@ -1,8 +1,9 @@
 OS := $(shell uname)
 
+.PHONY: clean test
+
 build: clean
-	cd cmd/align
-	go build -o bin/align
+	cd cmd/align; go build -o ../../bin/align
 
 test:
 	go test -v
@@ -28,5 +29,6 @@ endif
 uninstall: 
 	rm -f /usr/local/bin/align
 
-release:
+release: clean
 	./build.sh release
+
